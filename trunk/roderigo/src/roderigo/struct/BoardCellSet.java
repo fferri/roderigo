@@ -44,4 +44,12 @@ public class BoardCellSet extends HashSet<BoardCell> {
 		for(BoardCell cell : this)
 			cell.flipColor();
 	}
+	
+	public boolean containsAnEmptyCell() {
+		for(BoardCell cell : this) {
+			if(cell.isClear())
+				return true;
+		}
+		return false;
+	}
 }
