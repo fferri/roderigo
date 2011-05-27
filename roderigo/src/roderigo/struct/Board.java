@@ -40,30 +40,67 @@ public class Board {
 		reset();
 	}
 	
+	/**
+	 * @return The number of columns
+	 */
 	public int getNumRows() {
 		return boardCell.length;
 	}
 	
+	/**
+	 * @return The number of rows
+	 */
 	public int getNumColumns() {
 		return boardCell[0].length;
 	}
 	
+	/**
+	 * Perform a bound check
+	 * 
+	 * @param row
+	 * @param col
+	 * @return <code>true</code> if row, col is inside bounds,
+	 *         that is: 0 <= row < rows and 0 <= col < cols
+	 */
 	public boolean boundCheck(int row, int col) {
 		return (row >= 0 && row < getNumRows() && col >= 0 && col < getNumColumns());
 	}
 	
+	/**
+	 * Method to access a specific cell
+	 * 
+	 * @param row
+	 * @param col
+	 * @return The cell at row, col; or null if the position is out of bounds
+	 */
 	public BoardCell get(int row, int col) {
 		return boundCheck(row, col) ? boardCell[row][col] : null;
 	}
 	
+	/**
+	 * Return the set of all cells
+	 * 
+	 * @return
+	 */
 	public BoardCellSet getAllCells() {
 		return allCells;
 	}
 	
+	/**
+	 * Return the sets of cells having the given type
+	 * 
+	 * @param type
+	 * @return The above mentioned set
+	 */
 	public BoardCellSet getCellsOfType(BoardCell.Type type) {
 		return cellsByType.get(type);
 	}
 	
+	/**
+	 * Return the set of all cells not empty (i.e. occupied by a piece)
+	 * 
+	 * @return The above mentioned set
+	 */
 	public BoardCellSet getAllPieces() {
 		BoardCellSet result = new BoardCellSet();
 		
@@ -74,6 +111,11 @@ public class Board {
 		return result;
 	}
 	
+	/**
+	 * Copy board content from b
+	 * 
+	 * @param b
+	 */
 	public void copyFrom(Board b) {
 		if(b.getNumRows() != getNumRows() || b.getNumColumns() != getNumColumns())
 			throw new RuntimeException("Board size mismatch trying to do a copy");
@@ -85,6 +127,9 @@ public class Board {
 		}
 	}
 	
+	/**
+	 * Clone the board
+	 */
 	public Board clone() {
 		Board b = new Board(getNumRows(), getNumColumns());
 		
@@ -93,12 +138,18 @@ public class Board {
 		return b;
 	}
 	
+	/**
+	 * Clear the board (all cells empty)
+	 */
 	public void clearAll() {
 		for(BoardCell cell : allCells) {
 			cell.clear();
 		}
 	}
 	
+	/**
+	 * Reset the board to the initial game position (2 blacks and 2 whites)
+	 */
 	public void reset() {
 		clearAll();
 		
@@ -108,15 +159,25 @@ public class Board {
 		boardCell[4][3].setBlack();
 	}
 	
+	/**
+	 * Return the set of cells enclosed between a and b, either
+	 * vertically, horizontally, or diagonally
+	 * 
+	 * @param a
+	 * @param b
+	 * @return The above mentioned set
+	 */
 	public BoardCellSet between(BoardCell a, BoardCell b) {
 		BoardCellSet result = new BoardCellSet();
 		
 		int dr = (b.row - a.row);
 		int dc = (b.col - a.col);
 		
+		// two pieces not in position able to enclose any pieces
 		if(!(dr == 0 || dc == 0) && !(Math.abs(dr) == Math.abs(dc)))
-			return null; // two pieces not in position able to enclose any pieces
+			return null;
 		
+		// adjacent or overlapping cells -> return empty
 		if(Math.abs(dr) == 1 || Math.abs(dc) == 1 || a == b)
 			return result;
 		
@@ -137,6 +198,18 @@ public class Board {
 		return result;
 	}
 	
+	/**
+	 * Starting from cell, and always proceeding in the given direction, try to find
+	 * one or more pieces of opposite color, enclosed by a piece of given <code>color</code>, and
+	 * return the enclosing piece.
+	 * 
+	 * <code>cell</code> is usually empty. If not, it overrides <code>color</code>.
+	 * 
+	 * @param cell The cell to start the search from
+	 * @param dir The direction of the search
+	 * @param color Color of the enclosing piece
+	 * @return The enclosing piece
+	 */
 	private BoardCell findEnclosingPiece(BoardCell cell, Direction dir, BoardCellColor color) {
 		if(!cell.isClear())
 			color = cell.getColor();
@@ -162,11 +235,16 @@ public class Board {
 		if(foundOpp && foundMine) return cell;
 		else return null;
 	}
-	
-	public int getMobility(BoardCellColor color) {
-		return getValidMoves(color).size();
-	}
 
+	/**
+	 * Fringe is the contour of empty cells surrounding
+	 * the occupied cells.
+	 * 
+	 * It is used internally for enumerating valid moves,
+	 * since valid moves must necessarily be in the fringe.
+	 * 
+	 * @return The set of fringe cells
+	 */
 	public BoardCellSet getFringe() {
 		BoardCellSet result = new BoardCellSet();
 		
@@ -191,6 +269,12 @@ public class Board {
 		}
 	}
 	
+	/**
+	 * The border is the set of cells adjacent
+	 * to the empty cells.
+	 * 
+	 * @return The set of border cells
+	 */
 	public BoardCellSet getBorder() {
 		BoardCellSet result = new BoardCellSet();
 		
@@ -205,7 +289,7 @@ public class Board {
 		
 		BoardCellSet a = cell.adjacentCells();
 		
-		if(containsAnEmptyCell(a)) {
+		if(a.containsAnEmptyCell()) {
 			result.add(cell);
 		}
 		
@@ -216,14 +300,14 @@ public class Board {
 		}
 	}
 	
-	private boolean containsAnEmptyCell(BoardCellSet s) {
-		for(BoardCell cell : s) {
-			if(cell.isClear())
-				return true;
-		}
-		return false;
-	}
-
+	/**
+	 * Tells if a move is valid for a given player
+	 * (identified by <code>color</code>)
+	 * 
+	 * @param cell
+	 * @param color
+	 * @return
+	 */
 	public boolean isValidMove(BoardCell cell, BoardCellColor color) {
 		if(!cell.isClear())
 			return false;
@@ -236,6 +320,13 @@ public class Board {
 		return false;
 	}
 	
+	/**
+	 * Return the set of valid moves for a given player
+	 * (identified by <code>color</code>)
+	 * 
+	 * @param color
+	 * @return
+	 */
 	public BoardCellSet getValidMoves(BoardCellColor color) {
 		BoardCellSet r = new BoardCellSet();
 		
@@ -247,6 +338,15 @@ public class Board {
 		return r;
 	}
 
+	/**
+	 * Perform a move for the given player
+	 * (identified by <code>color</code>)
+	 * 
+	 * @param cell
+	 * @param color
+	 * @return <code>true</code> if the move was valid,
+	 *         <code>false</code> otherwise
+	 */
 	public boolean makeMove(BoardCell cell, BoardCellColor color) {
 		if(!cell.isClear()) return false;
 		
