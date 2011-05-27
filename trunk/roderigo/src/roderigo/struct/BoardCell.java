@@ -11,6 +11,14 @@ public class BoardCell {
 	public boolean visitedFlag = false;
 	public boolean stableFlag = false;
 	
+	/**
+	 * A cell can only be created by its board.
+	 * You cannot create a cell directly.
+	 * 
+	 * @param m
+	 * @param r
+	 * @param c
+	 */
 	public BoardCell(Board.BoardManager m, int r, int c) {
 		board = m.getBoard();
 		row = r;
@@ -86,7 +94,7 @@ public class BoardCell {
 			return Type.B;
 		
 		System.out.println("WTF!? BoardCell.java, getType()");
-		return Type.NONE; // unreachable
+		return Type.NONE; // should be unreachable
 	}
 	
 	public void flipColor() {
