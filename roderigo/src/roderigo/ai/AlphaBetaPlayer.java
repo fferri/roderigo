@@ -16,10 +16,9 @@ public class AlphaBetaPlayer {
 	
 	private JBoard jboard;
 	
-	private static boolean abort = false;
+	private boolean abort = false;
 	
-	public static synchronized void abort() {
-		System.out.println("ALPHABETA-PLAYER ABORTING...");
+	public synchronized void abort() {
 		abort = true;
 	}
 	
@@ -150,7 +149,11 @@ public class AlphaBetaPlayer {
 	private boolean visualFeedback = false;
 	
 	public BoardCell getBestMove() {
-		visualFeedback = Main.getInstance().mainWindow.toolbox.showReasoning.isSelected();
+		Main main = Main.getInstance();
+		
+		main.aiTask = this;
+		
+		visualFeedback = main.mainWindow.toolbox.showReasoning.isSelected();
 		
 		BoardCellSet moves = presentState.getBoard().getValidMoves(presentState.getTurn());
 		if(moves.size() == 1) return moves.iterator().next();
@@ -173,7 +176,9 @@ public class AlphaBetaPlayer {
 				cell.visitedFlag = false;
 			if(jboard != null) jboard.asyncRepaint();
 		}
-				
+		
+		main.aiTask = null;
+		
 		return bestMove; // what move did you to get to the next state?
 	}
 }
