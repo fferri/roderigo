@@ -2,6 +2,7 @@ package roderigo.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.lang.reflect.Method;
 
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
@@ -23,6 +24,7 @@ public class JRodrigoMainWindow extends JFrame {
 	public final JMenuBar menuBar;
 	public final JMenu menuTopGame;
 	public final JMenuItem menuItemNewGame;
+	public final JMenuItem menuItemSwapTurn;
 	public final JMenuItem menuItemWakeUpAI;
 	public final JMenuItem menuItemQuit;
 	public final JMenu menuTopOptions;
@@ -51,6 +53,7 @@ public class JRodrigoMainWindow extends JFrame {
 		menuBar.add(menuTopGame);
 
 		menuTopGame.add(menuItemNewGame = new JMenuItem(new ActionNewGame()));
+		menuTopGame.add(menuItemSwapTurn = new JMenuItem(new ActionSwapTurn()));
 		menuTopGame.add(menuItemWakeUpAI = new JMenuItem(new ActionWakeUpAI()));
 		menuTopGame.add(menuItemQuit = new JMenuItem(new ActionQuit()));
 		
@@ -59,13 +62,20 @@ public class JRodrigoMainWindow extends JFrame {
 		menuTopOptions.getAccessibleContext().setAccessibleDescription("Options menu");
 		menuBar.add(menuTopOptions);
 		
-		menuTopOptions.add(menuItemShowSearchAnim = new JCheckBoxMenuItem(new ActionToggleOption("Show search animation", 0)));
+		menuTopOptions.add(menuItemShowSearchAnim = new JCheckBoxMenuItem());
+		menuItemShowSearchAnim.setAction(new ActionToggleOption("Show search animation", menuItemShowSearchAnim, "setShowSearchAnim"));
 		menuItemShowSearchAnim.setSelected(controller.isShowSearchAnim());
-		menuTopOptions.add(menuItemDontMakeMoves = new JCheckBoxMenuItem(new ActionToggleOption("Don't make moves", 1)));
+		
+		menuTopOptions.add(menuItemDontMakeMoves = new JCheckBoxMenuItem());
+		menuItemDontMakeMoves.setAction(new ActionToggleOption("Don't make moves", menuItemDontMakeMoves, "setDontMakeMoves"));
 		menuItemDontMakeMoves.setSelected(controller.isDontMakeMoves());
-		menuTopOptions.add(menuItemAIPlaysBlack = new JCheckBoxMenuItem(new ActionToggleOption("AI plays black", 10)));
+		
+		menuTopOptions.add(menuItemAIPlaysBlack = new JCheckBoxMenuItem());
+		menuItemAIPlaysBlack.setAction(new ActionToggleOption("AI plays black", menuItemAIPlaysBlack, "setAiPlaysBlack"));
 		menuItemAIPlaysBlack.setSelected(controller.isAiPlaysBlack());
-		menuTopOptions.add(menuItemAIPlaysWhite = new JCheckBoxMenuItem(new ActionToggleOption("AI plays white", 11)));
+		
+		menuTopOptions.add(menuItemAIPlaysWhite = new JCheckBoxMenuItem());
+		menuItemAIPlaysWhite.setAction(new ActionToggleOption("AI plays white", menuItemAIPlaysWhite, "setAiPlaysWhite"));
 		menuItemAIPlaysWhite.setSelected(controller.isAiPlaysWhite());
 
 		menuBar.add(menuTopGame);
@@ -81,7 +91,7 @@ public class JRodrigoMainWindow extends JFrame {
 		jboardBorder.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "abortAiTask");
 		jboardBorder.getActionMap().put("abortAiTask", new AbstractAction() {
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent evt) {
 				Main main = Main.getInstance();
 				
 				if(main.aiTask != null)
@@ -102,10 +112,11 @@ public class JRodrigoMainWindow extends JFrame {
 		public ActionNewGame() {
 			super("New game", null);
 			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke("control N"));
+			putValue(SHORT_DESCRIPTION, "Abandon current game and start a new game");
 		}
 		
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void actionPerformed(ActionEvent evt) {
 			if(controller.getTurn() == null || JOptionPane.showConfirmDialog(JRodrigoMainWindow.this, "Are you sure?", "Abandon current game", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
 				controller.newGame();
 				controller.startGame();
@@ -117,10 +128,25 @@ public class JRodrigoMainWindow extends JFrame {
 		public ActionWakeUpAI() {
 			super("Wake up AI", null);
 			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke("control P"));
+			putValue(SHORT_DESCRIPTION, "Wakes up AI. If move computation was interrupted (ESC) can be restarted with this command");
 		}
 		
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void actionPerformed(ActionEvent evt) {
+			controller.continueGame();
+		}
+	}
+	
+	public class ActionSwapTurn extends AbstractAction {
+		public ActionSwapTurn() {
+			super("Swap turn", null);
+			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke("control S"));
+			putValue(SHORT_DESCRIPTION, "Swap turn (if used during game, has the effect of passing move, which is not a legal move in standard Othello)");
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent evt) {
+			controller.getGameState().switchTurn();
 			controller.continueGame();
 		}
 	}
@@ -129,37 +155,37 @@ public class JRodrigoMainWindow extends JFrame {
 		public ActionQuit() {
 			super("Quit game", null);
 			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke("control Q"));
+			putValue(SHORT_DESCRIPTION, "Quit game and terminate the program.");
 		}
 		
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void actionPerformed(ActionEvent evt) {
 			System.exit(0);
 		}
 	}
 
 	public class ActionToggleOption extends AbstractAction {
-		public final int i;
+		private JCheckBoxMenuItem menuItem;
+		private Method controllerMethod;
 		
-		public ActionToggleOption(String name, int i) {
+		public ActionToggleOption(String name, JCheckBoxMenuItem menuItem, String methodName) {
 			super(name, null);
-			this.i = i;
+			this.menuItem = menuItem;
+			try {
+				controllerMethod = Controller.class.getMethod(methodName, boolean.class);
+			} catch(Exception e) {
+				controllerMethod = null;
+				e.printStackTrace();
+			}
 		}
 		
 		@Override
-		public void actionPerformed(ActionEvent e) {
-			switch(i) {
-			case 0:
-				controller.setShowSearchAnim(menuItemShowSearchAnim.isSelected());
-				break;
-			case 1:
-				controller.setDontMakeMoves(menuItemDontMakeMoves.isSelected());
-				break;
-			case 10:
-				controller.setAiPlaysBlack(menuItemAIPlaysBlack.isSelected());
-				break;
-			case 11:
-				controller.setAiPlaysWhite(menuItemAIPlaysWhite.isSelected());
-				break;
+		public void actionPerformed(ActionEvent evt) {
+			if(controllerMethod == null) return;
+			try {
+				controllerMethod.invoke(controller, menuItem.isSelected());
+			} catch(Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}
