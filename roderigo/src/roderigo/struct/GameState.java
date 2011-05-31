@@ -69,7 +69,7 @@ public class GameState {
 		return true;
 	}
 	
-	private void switchTurn() {
+	public void switchTurn() {
 		turn = turn.opposite();
 	}
 	
