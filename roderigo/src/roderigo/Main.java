@@ -14,11 +14,32 @@ public class Main {
 		return instance;
 	}
 	
-	public final GameState game = new GameState();
-	public final JRodrigoMainWindow mainWindow = new JRodrigoMainWindow(game);
+	private final GameState game;
+	private final Controller controller;
+	
+	public final JRodrigoMainWindow mainWindow;
+	
+	// remember current ai task (so we can eventually stop it):
 	public AlphaBetaPlayer aiTask = null;
 	
+	// Constructor
+	private Main() {
+		controller = new Controller();
+		
+		game = new GameState();
+		mainWindow = new JRodrigoMainWindow(controller);
+		
+		controller.setGameState(game);
+		controller.setMainWindow(mainWindow);
+	}
+	
+	public void run() {
+		controller.startGame();
+	}
+	
 	public static void main(String args[]) {
-		Main.getInstance();
+		Main main = Main.getInstance();
+		
+		main.run();
 	}
 }

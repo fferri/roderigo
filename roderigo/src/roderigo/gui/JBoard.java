@@ -8,27 +8,23 @@ import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.util.ArrayList;
+import java.util.EventListener;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import roderigo.Main;
-import roderigo.ai.AlphaBetaPlayer;
+import roderigo.Controller;
 import roderigo.ai.BoardEvaluation;
-import roderigo.struct.Board;
 import roderigo.struct.BoardCell;
-import roderigo.struct.BoardCellColor;
-import roderigo.struct.BoardCellSet;
-import roderigo.struct.GameState;
 
-public class JBoard extends JPanel {
+public class JBoard extends JPanel implements MouseListener, MouseMotionListener {
 	private static final long serialVersionUID = 5041436229495994615L;
 	
-	//private Board board = null;
-	private GameState game = null;
+	private Controller controller;
 	
 	private JBoardColorScheme colors = new JBoardColorScheme();
 	
@@ -46,72 +42,29 @@ public class JBoard extends JPanel {
 	
 	private Boolean locked = false;
 	
-	public JBoard(GameState gameState) {
-		this.game = gameState;
+	public JBoard(Controller controller) {
+		this.controller = controller;
 
 		setPreferredSize(new Dimension(512, 512));
 		
-		addMouseListener(new MouseListener() {
-			@Override public void mouseReleased(MouseEvent e) {
-				if(clickedCell == null) return;
-				if(!clickedCell.equals(mouseCoordsToBoardCell(e.getX(), e.getY()))) return;
-				synchronized(locked) {
-					if(!locked.booleanValue()) {
-						if(game.move(clickedCell)) {
-							repaint();
-							update(); // asynchronous move & repaint
-						}
-					}
-				}
-				checkEndGame();
-			}
-			
-			@Override public void mousePressed(MouseEvent e) {
-				clickedCell = mouseCoordsToBoardCell(e.getX(), e.getY());
-			}
-			
-			@Override public void mouseExited(MouseEvent e) {}
-			
-			@Override public void mouseEntered(MouseEvent e) {}
-			
-			@Override public void mouseClicked(MouseEvent e) {}
-		});
+		addMouseListener(this);
+		addMouseMotionListener(this);
 		
-		addMouseMotionListener(new MouseMotionListener() {
-			@Override public void mouseDragged(MouseEvent e) {}
-			
-			@Override public void mouseMoved(MouseEvent e) {
-				BoardCell oldHover = hoverCell;
-				hoverCell = mouseCoordsToBoardCell(e.getX(), e.getY());
-				
-				if(hoverCell != oldHover) {
-					repaint();
-					
-					BoardEvaluation hh = allHeuristics.get(hoverCell);
-					if(hh != null) {
-						setToolTipText(hh.getHTMLString());
-					} else {
-						setToolTipText(null);
-					}
-				}
-			}
-		});
+		addCellListener(controller);
 	}
 	
-	public Board getBoard() {
-		return game.getBoard();
-	}
-	
-	private void lock() {
+	public void lock() {
 		synchronized(locked) {
 			locked = true;
+			
+			hoverCell = null;
 			
 			Cursor hourglassCursor = new Cursor(Cursor.WAIT_CURSOR);
 			setCursor(hourglassCursor);
 		}
 	}
 	
-	private void unlock() {
+	public void unlock() {
 		synchronized(locked) {
 			locked = false;
 			
@@ -131,70 +84,21 @@ public class JBoard extends JPanel {
 	
 	public BoardCell mouseCoordsToBoardCell(int x, int y) {
 		Metrics m = getMetrics();
-		return game.getBoard().get(y / m.cell, x / m.cell);
+		return controller.getBoard().get(y / m.cell, x / m.cell);
 	}
 	
-	public void update() {
-		// to call on init and after each move
-		// updates the heuristics, the best move, and such things
-		
-		allHeuristics = BoardEvaluation.evaluateAllMoves(game.getBoard(), game.getTurn());
-		
-		final int searchDepth = Main.getInstance().mainWindow.toolbox.searchDepth.getValue();
-		
-		new Thread() {
-			@Override
-			public void run() {
-				lock();
-				if(Main.getInstance().mainWindow.toolbox.dontMakeMoves.isSelected()) {
-					if(game.getTurn() == BoardCellColor.WHITE) {
-						bestMove = new AlphaBetaPlayer(game, searchDepth, JBoard.this).getBestMove();
-						asyncRepaint();
-					}
-				} else {
-					while(game.getTurn() == BoardCellColor.WHITE) {
-						bestMove = new AlphaBetaPlayer(game, searchDepth, JBoard.this).getBestMove();
-						if(bestMove != null) {
-							game.move(bestMove);
-							lastMove = bestMove;
-							bestMove = null;
-							allHeuristics = BoardEvaluation.evaluateAllMoves(game.getBoard(), game.getTurn());
-							asyncRepaint();
-						} else break;
-					}
-				}
-				unlock();
-				checkEndGame();
-			}
-		}.start();
+	public void evaluateValidMoves() {
+		allHeuristics = BoardEvaluation.evaluateAllMoves(controller.getBoard(), controller.getTurn());
 	}
 	
-	private void checkEndGame() {
-		synchronized(locked) {
-			if(locked.booleanValue()) return;
-			if(game.getTurn() != null) return;
-			
-			BoardCellSet pieces = game.getBoard().getAllPieces();
-			int w = pieces.whitePieces().size();
-			int b = pieces.blackPieces().size();
-			String message = "Game finished.\n\n";
-			if(w == b) {
-				message += "TIE! (" + w + " to " + b + ")";
-			} else {
-				BoardCellColor winner = BoardCellColor.WHITE;
-				if(b > w) winner = winner.opposite();
-				message += winner + " wins " + Math.max(w, b) + " to " + Math.min(w, b) + ".";
-				if(winner == BoardCellColor.BLACK) // human
-					message += "\nCongratulations!";
-				else
-					message += "\n\nHUMAN BEATEN BY MACHINE! (singularity still is far away though)";
-				message += "\n\nPlay again?";
-			}
-			int answer = JOptionPane.showConfirmDialog(getTopLevelAncestor(), message);
-			if(answer == JOptionPane.YES_OPTION) {
-				game.newGame();
-			}
-		}
+	public void setBestMove(BoardCell cell) {
+		bestMove = cell;
+		lastMove = null;
+	}
+	
+	public void setLastMove(BoardCell cell) {
+		bestMove = null;
+		lastMove = cell;
 	}
 	
 	public synchronized void asyncRepaint() {
@@ -219,16 +123,16 @@ public class JBoard extends JPanel {
 		g.fillRect(0, 0, m.width, m.height);
 		
 		
-		for(BoardCell c : game.getBoard().getAllCells())
+		for(BoardCell c : controller.getBoard().getAllCells())
 			paintCell(g, m, c);
 	}
 	
 	private void paintCell(Graphics g, Metrics m, BoardCell c) {
-		int x = c.col * m.cell,
-		    y = c.row * m.cell;
+		int x = 1 + c.col * m.cell,
+		    y = 1 + c.row * m.cell;
 		
 		boolean clear = c.isClear();
-		boolean validMove = game.getTurn() != null && c.isValidMove(game.getTurn());
+		boolean validMove = controller.getTurn() != null && c.isValidMove(controller.getTurn());
 		boolean hover = c == hoverCell;
 		
 		if(c.visitedFlag)
@@ -256,6 +160,75 @@ public class JBoard extends JPanel {
 		if(c == lastMove) {
 			g.setColor(colors.lastMove);
 			g.fillRect(x + m.cell / 2 - 2, y + m.cell / 2 - 2, 4, 4);
+		}
+	}
+	
+	// CellListener observer
+	
+	private List<CellListener> cellListeners = new ArrayList<CellListener>();
+	
+	public static interface CellListener extends EventListener {
+		public void cellClicked(BoardCell cell);
+	}
+	
+	public void addCellListener(CellListener listener) {
+		if(!cellListeners.contains(listener))
+			cellListeners.add(listener);
+	}
+	
+	public void removeCellListener(CellListener listener) {
+		cellListeners.remove(listener);
+	}
+	
+	private void notifyCellListeners(BoardCell cell) {
+		for(CellListener l : cellListeners)
+			l.cellClicked(cell);
+	}
+	
+	// MouseListener
+	
+	@Override public void mouseReleased(MouseEvent e) {
+		if(locked) return;
+		
+		if(clickedCell == null) return;
+		if(!clickedCell.equals(mouseCoordsToBoardCell(e.getX(), e.getY()))) return;
+		
+		synchronized(locked) {
+			if(!locked) {
+				notifyCellListeners(clickedCell);
+			}
+		}
+	}
+	
+	@Override public void mousePressed(MouseEvent e) {
+		clickedCell = mouseCoordsToBoardCell(e.getX(), e.getY());
+	}
+	
+	@Override public void mouseExited(MouseEvent e) {}
+	
+	@Override public void mouseEntered(MouseEvent e) {}
+	
+	@Override public void mouseClicked(MouseEvent e) {}
+	
+	// MouseMotionListener
+	
+	@Override public void mouseDragged(MouseEvent e) {}
+	
+	@Override public void mouseMoved(MouseEvent e) {
+		if(locked) return;
+		
+		BoardCell oldHover = hoverCell;
+		hoverCell = mouseCoordsToBoardCell(e.getX(), e.getY());
+		
+		if(hoverCell != oldHover) {
+			repaint();
+			
+			BoardEvaluation hh = allHeuristics.get(hoverCell);
+			if(hh != null) {
+				setToolTipText(hh.getHTMLString());
+			} else {
+				setToolTipText(null);
+			}
 		}
 	}
 }

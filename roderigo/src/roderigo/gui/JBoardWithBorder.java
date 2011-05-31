@@ -9,20 +9,23 @@ import java.awt.Insets;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 
+import roderigo.Controller;
 import roderigo.struct.Board;
 import roderigo.struct.BoardCell;
-import roderigo.struct.GameState;
 
 public class JBoardWithBorder extends JPanel {
 	private static final long serialVersionUID = 649882899923586387L;
 	
-	private JBoard jboard;
+	private Controller controller;
+	
+	public final JBoard jboard;
 	
 	private static final int TOTAL_BORDER_SIZE = 26;
 	private static final int INNER_BORDER_SIZE = 5;
 	
-	public JBoardWithBorder(GameState gameState) {
-		jboard = new JBoard(gameState);
+	public JBoardWithBorder(Controller controller) {
+		this.controller = controller;
+		jboard = new JBoard(controller);
 		
 		setLayout(new BorderLayout());
 		setBorder(new Border() {
@@ -34,7 +37,7 @@ public class JBoardWithBorder extends JPanel {
 				g.fillRoundRect(x + INNER_BORDER_SIZE, y + INNER_BORDER_SIZE, width - 2 * INNER_BORDER_SIZE, height - 2 * INNER_BORDER_SIZE, TOTAL_BORDER_SIZE, TOTAL_BORDER_SIZE);
 				g.setColor(Color.white);
 				
-				Board b = jboard.getBoard();
+				Board b = JBoardWithBorder.this.controller.getBoard();
 				JBoard.Metrics m = jboard.getMetrics();
 				int fh = g.getFontMetrics().getHeight();
 				int fw = g.getFontMetrics().stringWidth("m");
