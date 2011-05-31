@@ -52,6 +52,8 @@ public class Controller implements JBoard.CellListener {
 	public void continueGame() {
 		if(isAITurn())
 			runAITask();
+		else
+			checkEndGame();
 	}
 	
 	public Board getBoard() {
