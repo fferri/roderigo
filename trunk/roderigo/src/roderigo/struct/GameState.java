@@ -2,15 +2,18 @@ package roderigo.struct;
 
 public class GameState {
 	private Board board;
+	
 	private BoardCellColor turn;
+	
 	private BoardCell lastMove;
-	private GameState next;
+	private GameState next; // used by AlphaBetaPlayer
+	
 	private int depth;
 	
 	float hMin = 0, hMax = 0;
 	
 	public GameState() {
-		newGame();
+		newGame(); // creates a new Board object as well
 	}
 	
 	public GameState(GameState s) {

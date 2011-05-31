@@ -3,6 +3,7 @@ package roderigo.ai;
 import java.util.ArrayList;
 import java.util.List;
 
+import roderigo.Controller;
 import roderigo.Main;
 import roderigo.gui.JBoard;
 import roderigo.struct.BoardCell;
@@ -12,7 +13,9 @@ import roderigo.struct.GameState;
 
 public class AlphaBetaPlayer {
 	private GameState presentState;
+	
 	private int maxDepth;
+	private boolean visualFeedback = false;
 	
 	private JBoard jboard;
 	
@@ -30,11 +33,11 @@ public class AlphaBetaPlayer {
 		}
 	}
 	
-	public AlphaBetaPlayer(GameState presentState, int maxDepth, JBoard jboard) {
-		this.presentState = presentState;
-		this.maxDepth = maxDepth;
-		
-		this.jboard = jboard; // anim tricks
+	public AlphaBetaPlayer(Controller controller) {
+		this.presentState = controller.getGameState();
+		this.maxDepth = controller.getSearchDepth();
+		this.visualFeedback = controller.isShowSearchAnim();
+		this.jboard = controller.getMainWindow().jboard; // anim tricks
 	}
 
 	private List<GameState> getSuccessorStates(GameState state) {
@@ -145,15 +148,11 @@ public class AlphaBetaPlayer {
 		presentState.getBoard().get(cell.row, cell.col).visitedFlag = flag;
 		if(jboard != null) jboard.asyncRepaint();
 	}
-
-	private boolean visualFeedback = false;
 	
 	public BoardCell getBestMove() {
 		Main main = Main.getInstance();
 		
 		main.aiTask = this;
-		
-		visualFeedback = main.mainWindow.toolbox.showReasoning.isSelected();
 		
 		BoardCellSet moves = presentState.getBoard().getValidMoves(presentState.getTurn());
 		if(moves.size() == 1) return moves.iterator().next();
