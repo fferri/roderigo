@@ -199,6 +199,14 @@ public class Controller {
 		
 		notifySettingsListeners_settingsChanged();
 	}
+	
+	public boolean isRunAiTaskInBackground() {
+		return runAiTaskInBackground;
+	}
+	
+	public void setRunAiTaskInBackground(boolean runAiTaskInBackground) {
+		this.runAiTaskInBackground = runAiTaskInBackground;
+	}
 
 	public int getSearchDepth() {
 		return searchDepth;

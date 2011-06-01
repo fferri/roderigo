@@ -62,8 +62,10 @@ public class Main {
 			
 			@Override public void move(BoardCell cell, BoardCellColor color) {
 				mainWindow.jboard.setLastMove(cell);
-				//if(evaluateValidMoves)
-				//	mainWindow.jboard.evaluateValidMoves();
+				
+				if(controller.isEvaluateValidMoves())
+					mainWindow.jboard.evaluateValidMoves();
+				
 				mainWindow.jboard.asyncRepaint();
 			}
 			
