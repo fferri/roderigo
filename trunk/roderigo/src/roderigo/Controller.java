@@ -3,7 +3,6 @@ package roderigo;
 import javax.swing.JOptionPane;
 
 import roderigo.ai.AlphaBetaPlayer;
-import roderigo.gui.JBoard;
 import roderigo.gui.JRodrigoMainWindow;
 import roderigo.struct.Board;
 import roderigo.struct.BoardCell;
@@ -11,7 +10,7 @@ import roderigo.struct.BoardCellColor;
 import roderigo.struct.BoardCellSet;
 import roderigo.struct.GameState;
 
-public class Controller implements JBoard.CellListener {
+public class Controller {
 	private boolean aiPlaysWhite = true;
 	private boolean aiPlaysBlack = false;
 	
@@ -45,7 +44,9 @@ public class Controller implements JBoard.CellListener {
 	}
 	
 	public void startGame() {
-		// newGame ?
+		if(gameState.getTurn() == null)
+			gameState.newGame();
+		
 		continueGame();
 	}
 	
@@ -201,24 +202,5 @@ public class Controller implements JBoard.CellListener {
 
 	public void setSearchDepth(int searchDepth) {
 		this.searchDepth = searchDepth;
-	}
-
-	@Override
-	public void cellClicked(BoardCell cell) {
-		BoardCellColor turn = gameState.getTurn();
-		
-		if(turn == null) return;
-		
-		if(!isAITurn()) {
-			// human turn
-			boolean valid = gameState.move(cell);
-			
-			if(valid) {
-				mainWindow.jboard.asyncRepaint();
-				continueGame();
-			} else {
-				//JOptionPane.showMessageDialog(mainWindow, "Invalid move", "Error", JOptionPane.ERROR_MESSAGE);
-			}
-		}
 	}
 }

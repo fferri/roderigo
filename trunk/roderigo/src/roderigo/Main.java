@@ -1,7 +1,10 @@
 package roderigo;
 
 import roderigo.ai.AlphaBetaPlayer;
+import roderigo.gui.JBoard;
 import roderigo.gui.JRodrigoMainWindow;
+import roderigo.struct.BoardCell;
+import roderigo.struct.BoardCellColor;
 import roderigo.struct.GameState;
 
 public class Main {
@@ -14,7 +17,7 @@ public class Main {
 		return instance;
 	}
 	
-	private final GameState game;
+	private final GameState gameState;
 	private final Controller controller;
 	
 	public final JRodrigoMainWindow mainWindow;
@@ -26,10 +29,31 @@ public class Main {
 	private Main() {
 		controller = new Controller();
 		
-		game = new GameState();
+		gameState = new GameState();
 		mainWindow = new JRodrigoMainWindow(controller);
 		
-		controller.setGameState(game);
+		mainWindow.jboard.addCellListener(new JBoard.CellListener() {
+			@Override
+			public void cellClicked(BoardCell cell) {
+				BoardCellColor turn = gameState.getTurn();
+				
+				if(turn == null) return;
+				
+				if(!controller.isAITurn()) {
+					// human turn
+					boolean valid = gameState.move(cell);
+					
+					if(valid) {
+						mainWindow.jboard.asyncRepaint();
+						controller.continueGame();
+					} else {
+						//JOptionPane.showMessageDialog(mainWindow, "Invalid move", "Error", JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			}
+		});
+		
+		controller.setGameState(gameState);
 		controller.setMainWindow(mainWindow);
 	}
 	
