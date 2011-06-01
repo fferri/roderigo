@@ -1,5 +1,14 @@
 package roderigo.struct;
 
+/**
+ * Represent the state of a game, which is composed by a <code>Board</code> and
+ * the <code>BoardCellColor</code> of the player that has to move now.
+ * 
+ * When the game is finished, the color indicating the turn will be <code>null</code>
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class GameState {
 	private Board board;
 	
