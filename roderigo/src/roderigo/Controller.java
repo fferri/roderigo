@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.EventListener;
 import java.util.List;
 
+import roderigo.ai.AIPlayer;
 import roderigo.ai.AbortException;
 import roderigo.ai.AlphaBetaPlayer;
 import roderigo.struct.Board;
@@ -17,7 +18,6 @@ public class Controller {
 	private boolean aiPlaysBlack = false;
 	
 	private boolean dontMakeMoves = false;
-	private boolean showSearchAnim = true;
 	
 	private boolean evaluateValidMoves = false;
 	
@@ -82,14 +82,15 @@ public class Controller {
 	}
 	
 	private void runAITask_forReal() {
-		notifyAiTaskListeners_computationStart();
+		AIPlayer aiPlayer = new AlphaBetaPlayer(this);
+		notifyAiTaskListeners_computationStart(aiPlayer);
 
 		boolean aborted = false;
 		
 		while(isAITurn()) {
 			BoardCell bestMove = null;
 			try {
-				bestMove = new AlphaBetaPlayer(Controller.this).getBestMove();
+				bestMove = aiPlayer.getBestMove();
 			} catch(AbortException e) {
 				aborted = true;
 			}
@@ -116,8 +117,8 @@ public class Controller {
 			}
 		}
 		
-		if(aborted) notifyAiTaskListeners_computationAborted();
-		else notifyAiTaskListeners_computationEnd();
+		if(aborted) notifyAiTaskListeners_computationAborted(aiPlayer);
+		else notifyAiTaskListeners_computationEnd(aiPlayer);
 
 		checkEndGame();
 	}
@@ -185,15 +186,6 @@ public class Controller {
 		
 		notifySettingsListeners_settingsChanged();
 	}
-
-	public boolean isShowSearchAnim() {
-		return showSearchAnim;
-	}
-
-	public void setShowSearchAnim(boolean showSearchAnim) {
-		this.showSearchAnim = showSearchAnim;
-		
-		notifySettingsListeners_settingsChanged();	}
 
 	public boolean isEvaluateValidMoves() {
 		return evaluateValidMoves;
@@ -319,17 +311,17 @@ public class Controller {
 		/**
 		 * An AI computation has started
 		 */
-		public void computationStart();
+		public void computationStart(AIPlayer aiPlayer);
 		
 		/**
 		 * An AI computation has ended
 		 */
-		public void computationEnd();
+		public void computationEnd(AIPlayer aiPlayer);
 
 		/**
 		 * An AI computation has been aborted
 		 */
-		public void computationAborted();
+		public void computationAborted(AIPlayer aiPlayer);
 	}
 	
 	public void addAiTaskListener(AiTaskListener listener) {
@@ -341,19 +333,19 @@ public class Controller {
 		aiTaskListeners.remove(listener);
 	}
 	
-	private void notifyAiTaskListeners_computationStart() {
+	private void notifyAiTaskListeners_computationStart(AIPlayer aiPlayer) {
 		for(AiTaskListener l : aiTaskListeners)
-			l.computationStart();
+			l.computationStart(aiPlayer);
 	}
 
-	private void notifyAiTaskListeners_computationEnd() {
+	private void notifyAiTaskListeners_computationEnd(AIPlayer aiPlayer) {
 		for(AiTaskListener l : aiTaskListeners)
-			l.computationEnd();
+			l.computationEnd(aiPlayer);
 	}
 
-	private void notifyAiTaskListeners_computationAborted() {
+	private void notifyAiTaskListeners_computationAborted(AIPlayer aiPlayer) {
 		for(AiTaskListener l : aiTaskListeners)
-			l.computationAborted();
+			l.computationAborted(aiPlayer);
 	}
 	
 	// SettingsListener observer

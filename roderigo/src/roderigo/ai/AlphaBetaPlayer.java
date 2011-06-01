@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import roderigo.Controller;
-import roderigo.Main;
-import roderigo.gui.JBoard;
 import roderigo.struct.BoardCell;
 import roderigo.struct.BoardCellColor;
 import roderigo.struct.BoardCellSet;
@@ -15,10 +13,7 @@ public class AlphaBetaPlayer implements AIPlayer {
 	private GameState presentState;
 	
 	private int maxDepth;
-	private boolean visualFeedback = false;
-	
-	private JBoard jboard;
-	
+
 	private boolean abort = false;
 	
 	public synchronized void abort() {
@@ -29,11 +24,6 @@ public class AlphaBetaPlayer implements AIPlayer {
 		this.presentState = controller.getGameState();
 		
 		this.maxDepth = controller.getSearchDepth();
-		
-		this.visualFeedback = controller.isShowSearchAnim();
-		
-		// FIXME: controlled is now decoupled from GUI
-		this.jboard = null; //controller.getMainWindow().jboard; // anim tricks
 	}
 
 	private List<GameState> getSuccessorStates(GameState state) {
@@ -120,8 +110,6 @@ public class AlphaBetaPlayer implements AIPlayer {
 	private int minmaxValue(GameState state, AlphaBeta ab, int depth) throws AbortException {
 		if(abort) throw new AbortException();
 		
-		visuallyMarkVisitedCell(state.getLastMove(), true);
-		
 		// since a player may have no moves, we rely on GameState
 		// to know which player has the turn, and choose the right
 		// action (min or max)
@@ -133,23 +121,10 @@ public class AlphaBetaPlayer implements AIPlayer {
 		else if(turn == BoardCellColor.BLACK)
 			retVal = maxValue(state, ab, depth);
 		
-		visuallyMarkVisitedCell(state.getLastMove(), false);
-		
 		return retVal;
 	}
 	
-	private void visuallyMarkVisitedCell(BoardCell cell, boolean flag) {
-		if(!visualFeedback) return;
-		if(cell == null) return;
-		presentState.getBoard().get(cell.row, cell.col).visitedFlag = flag;
-		if(jboard != null) jboard.asyncRepaint();
-	}
-	
 	public BoardCell getBestMove() throws AbortException {
-		Main main = Main.getInstance();
-		
-		main.aiTask = this;
-		
 		BoardCellSet moves = presentState.getBoard().getValidMoves(presentState.getTurn());
 		if(moves.size() == 1) return moves.iterator().next();
 		
@@ -165,14 +140,6 @@ public class AlphaBetaPlayer implements AIPlayer {
 		} catch(AbortException e) {
 			System.out.println("ALPHABETA-PLAYER ABORTED.");
 		}
-		
-		if(visualFeedback) {
-			for(BoardCell cell : presentState.getBoard().getAllCells())
-				cell.visitedFlag = false;
-			if(jboard != null) jboard.asyncRepaint();
-		}
-		
-		main.aiTask = null;
 		
 		if(abort) throw new AbortException();
 		

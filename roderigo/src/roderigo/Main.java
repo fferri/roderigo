@@ -1,8 +1,13 @@
 package roderigo;
 
-import javax.swing.JOptionPane;
+import java.awt.event.ActionEvent;
 
-import roderigo.ai.AlphaBetaPlayer;
+import javax.swing.AbstractAction;
+import javax.swing.JComponent;
+import javax.swing.JOptionPane;
+import javax.swing.KeyStroke;
+
+import roderigo.ai.AIPlayer;
 import roderigo.gui.JBoard;
 import roderigo.gui.JRodrigoMainWindow;
 import roderigo.struct.BoardCell;
@@ -10,23 +15,12 @@ import roderigo.struct.BoardCellColor;
 import roderigo.struct.GameState;
 
 public class Main {
-	private static Main instance = null;
-	
-	// FIXME: there are still two quirks left that prevent from
-	//        removing the singleton here
-	public static synchronized Main getInstance() {
-		if(instance == null) {
-			instance = new Main();
-		}
-		return instance;
-	}
-	
 	private final Controller controller;
 	
 	public final JRodrigoMainWindow mainWindow;
 	
 	// remember current ai task (so we can eventually stop it):
-	public AlphaBetaPlayer aiTask = null;
+	public AIPlayer aiTask = null;
 	
 	// Constructor
 	private Main() {
@@ -35,11 +29,20 @@ public class Main {
 		mainWindow = new JRodrigoMainWindow(controller);
 		
 		controller.addAiTaskListener(new Controller.AiTaskListener() {
-			@Override public void computationStart() { mainWindow.jboard.lock(); }
+			@Override public void computationStart(AIPlayer aiPlayer) {
+				aiTask = aiPlayer;
+				mainWindow.jboard.lock();
+			}
 			
-			@Override public void computationEnd() { mainWindow.jboard.unlock(); }
+			@Override public void computationEnd(AIPlayer aiPlayer) {
+				mainWindow.jboard.unlock();
+				aiTask = null;
+			}
 			
-			@Override public void computationAborted() { mainWindow.jboard.unlock(); }
+			@Override public void computationAborted(AIPlayer aiPlayer) {
+				mainWindow.jboard.unlock();
+				aiTask = null;
+			}
 		});
 		
 		controller.addGameListener(new Controller.GameListener() {
@@ -75,9 +78,18 @@ public class Main {
 			}
 		});
 		
+		mainWindow.jboard.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "abortAiTask");
+		mainWindow.jboard.getActionMap().put("abortAiTask", new AbstractAction() {
+			private static final long serialVersionUID = 7906203027073311035L;
+
+			@Override public void actionPerformed(ActionEvent evt) {
+				if(aiTask != null)
+					aiTask.abort();
+			}
+		});
+		
 		mainWindow.jboard.addCellListener(new JBoard.CellListener() {
-			@Override
-			public void cellClicked(BoardCell cell) {
+			@Override public void cellClicked(BoardCell cell) {
 				BoardCellColor turn = controller.getGameState().getTurn();
 				
 				if(turn == null) return;
@@ -102,7 +114,7 @@ public class Main {
 	}
 	
 	public static void main(String args[]) {
-		Main main = Main.getInstance();
+		Main main = new Main();
 		
 		main.run();
 	}
