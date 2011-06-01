@@ -5,7 +5,6 @@ import java.util.List;
 
 import roderigo.Controller;
 import roderigo.struct.BoardCell;
-import roderigo.struct.BoardCellColor;
 import roderigo.struct.BoardCellSet;
 import roderigo.struct.GameState;
 
@@ -41,14 +40,7 @@ public class AlphaBetaPlayer implements AIPlayer {
 	}
 	
 	private int computeUtility(GameState state) {
-		BoardCellColor turn = state.getTurn();
-		BoardEvaluation h = new BoardEvaluation(state.getBoard(), null, turn);
-		int value = h.getValue();
-		if(turn == BoardCellColor.BLACK)
-			return value;
-		if(turn == BoardCellColor.WHITE)
-			return -value;
-		throw new RuntimeException("illegal state");
+		return new BoardEvaluation(state.getBoard(), null, presentState.getTurn()).getValue();
 	}
 
 	private boolean terminalTest(GameState state) {
@@ -56,6 +48,7 @@ public class AlphaBetaPlayer implements AIPlayer {
 	}
 
 	private int maxValue(GameState state, AlphaBeta ab, int depth) throws AbortException {
+		if(abort) throw new AbortException();
 		int v = Integer.MIN_VALUE;
 		if(terminalTest(state) || depth >= maxDepth) {
 			return computeUtility(state);
@@ -63,8 +56,7 @@ public class AlphaBetaPlayer implements AIPlayer {
 			List<GameState> successorList = getSuccessorStates(state);
 			for(int i = 0; i < successorList.size(); i++) {
 				GameState successor = (GameState) successorList.get(i);
-				//int minimumValueOfSuccessor = minValue(successor, ab != null ? ab.clone() : null, depth + 1);
-				int minimumValueOfSuccessor = minmaxValue(successor, ab != null ? ab.clone() : null, depth + 1);
+				int minimumValueOfSuccessor = minValue(successor, ab != null ? ab.clone() : null, depth + 1);
 				if(minimumValueOfSuccessor > v) {
 					v = minimumValueOfSuccessor;
 					state.setNext(successor);
@@ -82,6 +74,7 @@ public class AlphaBetaPlayer implements AIPlayer {
 	}
 	
 	private int minValue(GameState state, AlphaBeta ab, int depth) throws AbortException {
+		if(abort) throw new AbortException();
 		int v = Integer.MAX_VALUE;
 		if(terminalTest(state) || depth >= maxDepth) {
 			return computeUtility(state);
@@ -89,8 +82,7 @@ public class AlphaBetaPlayer implements AIPlayer {
 			List<GameState> successorList = getSuccessorStates(state);
 			for(int i = 0; i < successorList.size(); i++) {
 				GameState successor = successorList.get(i);
-				//int maximumValueOfSuccessor = maxValue(successor, ab != null ? ab.clone() : null, depth + 1);
-				int maximumValueOfSuccessor = minmaxValue(successor, ab != null ? ab.clone() : null, depth + 1);
+				int maximumValueOfSuccessor = maxValue(successor, ab != null ? ab.clone() : null, depth + 1);
 				if(maximumValueOfSuccessor < v) {
 					v = maximumValueOfSuccessor;
 					state.setNext(successor);
@@ -107,23 +99,6 @@ public class AlphaBetaPlayer implements AIPlayer {
 		}
 	}
 	
-	private int minmaxValue(GameState state, AlphaBeta ab, int depth) throws AbortException {
-		if(abort) throw new AbortException();
-		
-		// since a player may have no moves, we rely on GameState
-		// to know which player has the turn, and choose the right
-		// action (min or max)
-		int retVal = 0;
-		BoardCellColor turn = state.getTurn();
-		
-		if(turn == BoardCellColor.WHITE)
-			retVal = minValue(state, ab, depth);
-		else if(turn == BoardCellColor.BLACK)
-			retVal = maxValue(state, ab, depth);
-		
-		return retVal;
-	}
-	
 	public BoardCell getBestMove() throws AbortException {
 		BoardCellSet moves = presentState.getBoard().getValidMoves(presentState.getTurn());
 		if(moves.size() == 1) return moves.iterator().next();
@@ -131,7 +106,7 @@ public class AlphaBetaPlayer implements AIPlayer {
 		abort = false;
 		BoardCell bestMove = null;
 		try {
-			minmaxValue(presentState, new AlphaBeta(Integer.MIN_VALUE, Integer.MAX_VALUE), 0);
+			maxValue(presentState, new AlphaBeta(Integer.MIN_VALUE, Integer.MAX_VALUE), 0);
 			GameState nextState = presentState.getNext();
 			if(nextState == null)
 				throw new RuntimeException("AlphaBetaPlayer made a BOO-BOO");
