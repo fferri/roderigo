@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.EventListener;
 import java.util.List;
 
+import roderigo.ai.AbortException;
 import roderigo.ai.AlphaBetaPlayer;
 import roderigo.struct.Board;
 import roderigo.struct.BoardCell;
@@ -86,11 +87,15 @@ public class Controller {
 		boolean aborted = false;
 		
 		while(isAITurn()) {
-			BoardCell bestMove = new AlphaBetaPlayer(Controller.this).getBestMove();
+			BoardCell bestMove = null;
+			try {
+				bestMove = new AlphaBetaPlayer(Controller.this).getBestMove();
+			} catch(AbortException e) {
+				aborted = true;
+			}
 			
 			if(bestMove == null) {
-				// aborted by user [ESC] (or some problem?)
-				aborted = true;
+				// something wrong with the AIPlayer...
 				break;
 			}
 			

@@ -11,7 +11,7 @@ import roderigo.struct.BoardCellColor;
 import roderigo.struct.BoardCellSet;
 import roderigo.struct.GameState;
 
-public class AlphaBetaPlayer {
+public class AlphaBetaPlayer implements AIPlayer {
 	private GameState presentState;
 	
 	private int maxDepth;
@@ -23,14 +23,6 @@ public class AlphaBetaPlayer {
 	
 	public synchronized void abort() {
 		abort = true;
-	}
-	
-	public static class AbortException extends Exception {
-		private static final long serialVersionUID = -5608434305271667562L;
-
-		public AbortException() {
-			super("MinMax-AlphaBeta aborted");
-		}
 	}
 	
 	public AlphaBetaPlayer(Controller controller) {
@@ -153,7 +145,7 @@ public class AlphaBetaPlayer {
 		if(jboard != null) jboard.asyncRepaint();
 	}
 	
-	public BoardCell getBestMove() {
+	public BoardCell getBestMove() throws AbortException {
 		Main main = Main.getInstance();
 		
 		main.aiTask = this;
@@ -182,6 +174,8 @@ public class AlphaBetaPlayer {
 		
 		main.aiTask = null;
 		
-		return bestMove; // what move did you to get to the next state?
+		if(abort) throw new AbortException();
+		
+		return bestMove;
 	}
 }
