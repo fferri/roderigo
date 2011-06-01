@@ -1,6 +1,7 @@
 package roderigo;
 
 import java.awt.event.ActionEvent;
+import java.io.PrintWriter;
 
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
@@ -110,12 +111,13 @@ public class Main {
 	}
 	
 	public void run() {
+		controller.getBoard().print(new PrintWriter(System.out));
 		controller.startGame();
 	}
 	
 	public static void main(String args[]) {
 		Main main = new Main();
-		
+
 		main.run();
 	}
 }

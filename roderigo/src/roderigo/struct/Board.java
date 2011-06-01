@@ -1,5 +1,6 @@
 package roderigo.struct;
 
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -366,5 +367,24 @@ public class Board {
 		cell.setColor(color);
 		
 		return true;
+	}
+	
+	public void print(PrintWriter pw) {
+		// header:
+		pw.println("   abcdefgh");
+		for(int row = 0; row < getNumRows(); row++) {
+			pw.print("" + (row+1) + ": ");
+			for(int col = 0; col < getNumColumns(); col++) {
+				BoardCell cell = get(row, col);
+				if(cell.isClear())
+					pw.print(".");
+				else if(cell.isBlack())
+					pw.print("*");
+				else if(cell.isWhite())
+					pw.print("o");
+			}
+			pw.println("");
+		}
+		pw.flush();
 	}
 }
