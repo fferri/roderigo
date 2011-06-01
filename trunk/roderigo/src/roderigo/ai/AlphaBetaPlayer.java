@@ -35,9 +35,13 @@ public class AlphaBetaPlayer {
 	
 	public AlphaBetaPlayer(Controller controller) {
 		this.presentState = controller.getGameState();
+		
 		this.maxDepth = controller.getSearchDepth();
+		
 		this.visualFeedback = controller.isShowSearchAnim();
-		this.jboard = controller.getMainWindow().jboard; // anim tricks
+		
+		// FIXME: controlled is now decoupled from GUI
+		this.jboard = null; //controller.getMainWindow().jboard; // anim tricks
 	}
 
 	private List<GameState> getSuccessorStates(GameState state) {
