@@ -7,7 +7,6 @@ import java.lang.reflect.Method;
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -17,7 +16,6 @@ import javax.swing.KeyStroke;
 import javax.swing.border.BevelBorder;
 
 import roderigo.Controller;
-import roderigo.Main;
 
 @SuppressWarnings("serial")
 public class JRodrigoMainWindow extends JFrame {
@@ -28,7 +26,6 @@ public class JRodrigoMainWindow extends JFrame {
 	public final JMenuItem menuItemWakeUpAI;
 	public final JMenuItem menuItemQuit;
 	public final JMenu menuTopOptions;
-	public final JCheckBoxMenuItem menuItemShowSearchAnim;
 	public final JCheckBoxMenuItem menuItemDontMakeMoves;
 	public final JCheckBoxMenuItem menuItemAIPlaysBlack;
 	public final JCheckBoxMenuItem menuItemAIPlaysWhite;
@@ -62,10 +59,6 @@ public class JRodrigoMainWindow extends JFrame {
 		menuTopOptions.getAccessibleContext().setAccessibleDescription("Options menu");
 		menuBar.add(menuTopOptions);
 		
-		menuTopOptions.add(menuItemShowSearchAnim = new JCheckBoxMenuItem());
-		menuItemShowSearchAnim.setAction(new ActionToggleOption("Show search animation", menuItemShowSearchAnim, "setShowSearchAnim"));
-		menuItemShowSearchAnim.setSelected(controller.isShowSearchAnim());
-		
 		menuTopOptions.add(menuItemDontMakeMoves = new JCheckBoxMenuItem());
 		menuItemDontMakeMoves.setAction(new ActionToggleOption("Don't make moves", menuItemDontMakeMoves, "setDontMakeMoves"));
 		menuItemDontMakeMoves.setSelected(controller.isDontMakeMoves());
@@ -87,18 +80,7 @@ public class JRodrigoMainWindow extends JFrame {
 		jboard = jboardBorder.jboard;
 		
 		toolbox = new JToolbox(controller);
-		
-		jboardBorder.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "abortAiTask");
-		jboardBorder.getActionMap().put("abortAiTask", new AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent evt) {
-				Main main = Main.getInstance();
-				
-				if(main.aiTask != null)
-					main.aiTask.abort();
-			}
-		});
-		
+
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		add(jboardBorder);
 		add(toolbox);
