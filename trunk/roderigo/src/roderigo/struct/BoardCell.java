@@ -34,13 +34,20 @@ public class BoardCell {
 		return String.format("%c", (col + 'a'));
 	}
 	
+	public static String getRowColumnString(int row, int col) {
+		return getColumnString(col) + getRowString(row);
+	}
+	
 	public String toString() {
-		String rowcol = getColumnString(col) + getRowString(row);
-		
-		if(color == null)
-			return rowcol;
-		else
-			return rowcol + ":" + color.toString().substring(0, 1);
+		return getRowColumnString(row, col) + (color != null ? (":" + color.toString().substring(0, 1)) : "");
+	}
+	
+	public static BoardCell fromString(Board board, String rowcolString) {
+		char c = rowcolString.charAt(0);
+		if(!(c >= 'a' && c <= 'z')) return null;
+		int row = Integer.parseInt(rowcolString.substring(1)) - 1;
+		int col = c - 'a';
+		return board.get(row, col);
 	}
 	
 	public void copyFrom(BoardCell c) {
