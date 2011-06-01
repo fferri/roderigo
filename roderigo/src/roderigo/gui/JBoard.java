@@ -49,8 +49,6 @@ public class JBoard extends JPanel implements MouseListener, MouseMotionListener
 		
 		addMouseListener(this);
 		addMouseMotionListener(this);
-		
-		addCellListener(controller);
 	}
 	
 	public void lock() {
