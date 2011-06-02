@@ -79,6 +79,17 @@ public class Board {
 	}
 	
 	/**
+	 * Used when dealing with a foreign cell; it retrieves the corresponding cell
+	 * in *this* board.
+	 * 
+	 * @param cell The foreign cell
+	 * @return The corresponding cell in this board
+	 */
+	public BoardCell conformCell(BoardCell cell) {
+		return get(cell.row, cell.col);
+	}
+	
+	/**
 	 * Return the set of all cells
 	 * 
 	 * @return
@@ -349,6 +360,8 @@ public class Board {
 	 *         <code>false</code> otherwise
 	 */
 	public boolean makeMove(BoardCell cell, BoardCellColor color) {
+		cell = conformCell(cell);
+		
 		if(!cell.isClear()) return false;
 		
 		BoardCellSet enclosingPieces = new BoardCellSet();
@@ -369,6 +382,11 @@ public class Board {
 		return true;
 	}
 	
+	/**
+	 * Print the board.
+	 * 
+	 * @param pw The <code>PrintWriter</code> used for printing the board
+	 */
 	public void print(PrintWriter pw) {
 		// header:
 		pw.println("   abcdefgh");

@@ -14,12 +14,7 @@ public class GameState {
 	
 	private BoardCellColor turn;
 	
-	private BoardCell lastMove;
-	private GameState next; // used by AlphaBetaPlayer
-	
 	private int depth;
-	
-	float hMin = 0, hMax = 0;
 	
 	public GameState() {
 		newGame(); // creates a new Board object as well
@@ -28,7 +23,6 @@ public class GameState {
 	public GameState(GameState s) {
 		board = s.getBoard().clone();
 		turn = s.getTurn();
-		lastMove = s.getLastMove();
 		depth = s.getDepth();
 	}
 	
@@ -40,10 +34,6 @@ public class GameState {
 		return turn;
 	}
 	
-	public BoardCell getLastMove() {
-		return lastMove;
-	}
-	
 	public void newGame() {
 		board = new Board(8, 8);
 		turn = BoardCellColor.BLACK;
@@ -51,7 +41,7 @@ public class GameState {
 	}
 
 	public boolean move(BoardCell c) {
-		if(!board.makeMove(board.get(c.row, c.col), turn))
+		if(!board.makeMove(c, turn))
 			return false;
 		
 		switchTurn();
@@ -72,7 +62,6 @@ public class GameState {
 			}
 		}
 		
-		lastMove = c;
 		depth++;
 		
 		return true;
@@ -80,14 +69,6 @@ public class GameState {
 	
 	public void switchTurn() {
 		turn = turn.opposite();
-	}
-	
-	public GameState getNext() {
-		return next;
-	}
-	
-	public void setNext(GameState n) {
-		next = n;
 	}
 	
 	public int getDepth() {

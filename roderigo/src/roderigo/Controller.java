@@ -23,16 +23,16 @@ public class Controller {
 	
 	private boolean runAiTaskInBackground = true;
 	
-	private int searchDepth = 3;
+	private int searchDepth = 5;
 	
 	private final GameState gameState;
 	
+	// time measurement
+	private long startTime[] = new long[2];
+	private long totalTime[] = new long[2];
+	
 	public Controller(GameState gameState) {
 		this.gameState = gameState;
-	}
-	
-	public GameState getGameState() {
-		return gameState;
 	}
 	
 	public void startGame() {
@@ -43,10 +43,33 @@ public class Controller {
 	}
 	
 	public void continueGame() {
+		startMeasuringTime(getTurn());
+		
 		if(isAITurn())
 			runAITask();
 		else
 			checkEndGame();
+	}
+	
+	public boolean move(BoardCell cell) {
+		BoardCellColor oldTurn = getTurn();
+		
+		if(gameState.move(cell)) {
+			long time = stopMeasuringTime(oldTurn);
+			notifyGameMoveListeners_move(cell, oldTurn, time);
+			
+			if(getTurn() == oldTurn)
+				notifyGameMoveListeners_pass(oldTurn.opposite());
+			
+			startMeasuringTime(getTurn());
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public void switchTurn() {
+		gameState.switchTurn();
 	}
 	
 	public Board getBoard() {
@@ -82,7 +105,7 @@ public class Controller {
 	}
 	
 	private void runAITask_forReal() {
-		AIPlayer aiPlayer = new AlphaBetaPlayer(this);
+		AIPlayer aiPlayer = new AlphaBetaPlayer(gameState, getSearchDepth());
 		notifyAiTaskListeners_computationStart(aiPlayer);
 
 		boolean aborted = false;
@@ -93,7 +116,11 @@ public class Controller {
 				bestMove = aiPlayer.getBestMove();
 			} catch(AbortException e) {
 				aborted = true;
+				startTime[getTurn().ordinal()] = 0;
 			}
+			
+			BoardCellColor oldTurn = getTurn();
+			long time = stopMeasuringTime(oldTurn);
 			
 			if(bestMove == null) {
 				// something wrong with the AIPlayer...
@@ -104,15 +131,14 @@ public class Controller {
 				notifyGameMoveListeners_hint(bestMove, getTurn());
 				break;
 			}
-
-			BoardCellColor oldTurn = getTurn();
 			
 			if(gameState.move(bestMove)) {
-				notifyGameMoveListeners_move(bestMove, getTurn());
+				notifyGameMoveListeners_move(bestMove, oldTurn, time);
 				
 				if(getTurn() == oldTurn)
 					notifyGameMoveListeners_pass(oldTurn.opposite());
 				
+				startMeasuringTime(getTurn());
 				continue;
 			}
 		}
@@ -125,6 +151,9 @@ public class Controller {
 	
 	public void checkEndGame() {
 		if(getTurn() != null) return;
+		
+		stopMeasuringTime(BoardCellColor.BLACK);
+		stopMeasuringTime(BoardCellColor.WHITE);
 		
 		notifyGameListeners_gameEnd(gameState);
 	}
@@ -152,6 +181,9 @@ public class Controller {
 				message.append("\nCongratulations!");
 			else if(humanVSmachine)
 				message.append("\n\nHUMAN BEATEN BY MACHINE!");
+			
+			message.append("\n\nTotal BLACK time: " + String.format("%.1f", totalTime[BoardCellColor.BLACK.ordinal()] / 1000.0));
+			message.append("\nTotal WHITE time: " + String.format("%.1f", totalTime[BoardCellColor.WHITE.ordinal()] / 1000.0));
 		}
 		
 		return message.toString();
@@ -215,6 +247,32 @@ public class Controller {
 		notifySettingsListeners_settingsChanged();
 	}
 	
+	private void startMeasuringTime(BoardCellColor color) {
+		if(color == null) return;
+		
+		int i = color.ordinal();
+		if(startTime[i] == 0) {
+			startTime[i] = System.currentTimeMillis();
+		} else {
+			System.err.println("WARNING: startMeasuringTime(" + color + ") called multiple times");
+			System.err.flush();
+		}
+	}
+	
+	private long stopMeasuringTime(BoardCellColor color) {
+		if(color == null) return 0;
+		
+		int i = color.ordinal();
+		if(startTime[i] != 0) {
+			long delta = System.currentTimeMillis() - startTime[i];
+			totalTime[i] += delta;
+			startTime[i] = 0;
+			return delta;
+		} else {
+			return 0;
+		}
+	}
+	
 	// GameMoveListener observer
 	
 	private List<GameMoveListener> gameMoveListeners = new ArrayList<GameMoveListener>();
@@ -225,8 +283,9 @@ public class Controller {
 		 * 
 		 * @param cell Cell indicating the move made
 		 * @param color The player which has made the move
+		 * @param time Time used by player in milliseconds
 		 */
-		public void move(BoardCell cell, BoardCellColor color);
+		public void move(BoardCell cell, BoardCellColor color, long time);
 		
 		/**
 		 * Player had to pass move
@@ -253,9 +312,9 @@ public class Controller {
 		gameMoveListeners.remove(listener);
 	}
 	
-	private void notifyGameMoveListeners_move(BoardCell cell, BoardCellColor color) {
+	private void notifyGameMoveListeners_move(BoardCell cell, BoardCellColor color, long time) {
 		for(GameMoveListener l : gameMoveListeners)
-			l.move(cell, color);
+			l.move(cell, color, time);
 	}
 	
 	private void notifyGameMoveListeners_pass(BoardCellColor color) {
