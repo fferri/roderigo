@@ -12,6 +12,7 @@ import roderigo.struct.BoardCellSet;
  * Evaluation of board, based on the following heuristics:
  * <ul>
  * <li>Mobility
+ * <li>"Wall"
  * <li>Corners
  * <li>Edges
  * <li>Partial influence map (only A, B, C, X cells)
@@ -22,59 +23,80 @@ import roderigo.struct.BoardCellSet;
  *
  */
 public class BoardEvaluation {
-	private int ownMobility;
-	private int opponentMobility;
-	private int ownBorderPieceCount;
-	private int opponentBorderPieceCount;
-	private int ownPieceCount;
-	private int opponentPieceCount;
-	private int ownStablePieceCount;
-	private int opponentStablePieceCount;
-	private int ownCorners;
-	private int opponentCorners;
-	private int ownXcells;
-	private int opponentXcells;
-	private int ownCcells;
-	private int opponentCcells;
-	private int ownABcells;
-	private int opponentABcells;
+	public static enum Measure {
+		ownMobility,
+		opponentMobility,
+		ownBorderPieceCount,
+		opponentBorderPieceCount,
+		ownPieceCount,
+		opponentPieceCount,
+		ownStablePieceCount,
+		opponentStablePieceCount,
+		ownCorners,
+		opponentCorners,
+		ownXcells,
+		opponentXcells,
+		ownCcells,
+		opponentCcells,
+		ownABcells,
+		opponentABcells
+	};
+	
+	public static final int defaultWeights[] = {
+		10, -86, -30, 25, 0, 0, 0, 0, 30000, -30000, -200, 200, -190, 10, 50, -50
+	};
+	
+	private int value[];
+	private int weight[];
+	
 	private boolean gameEnd;
 
 	public BoardEvaluation(Board board, BoardCellColor color) {
-		ownMobility = board.getValidMoves(color).size();
-		opponentMobility = board.getValidMoves(color.opposite()).size();
-		gameEnd = ownMobility == 0 && opponentMobility == 0;
+		int n = Measure.values().length;
+		value = new int[n];
+		weight = new int[n];
+		
+		value[Measure.ownMobility.ordinal()] = board.getValidMoves(color).size();
+		value[Measure.opponentMobility.ordinal()] = board.getValidMoves(color.opposite()).size();
 		
 		BoardCellSet border = board.getBorder();
-		ownBorderPieceCount = border.piecesOfColor(color).size();
-		opponentBorderPieceCount = border.piecesOfColor(color.opposite()).size();
+		value[Measure.ownBorderPieceCount.ordinal()] = border.piecesOfColor(color).size();
+		value[Measure.opponentBorderPieceCount.ordinal()] = border.piecesOfColor(color.opposite()).size();
 		
 		BoardCellSet allPieces = board.getAllPieces();
-		ownPieceCount = allPieces.piecesOfColor(color).size();
-		opponentPieceCount = allPieces.piecesOfColor(color.opposite()).size();
+		value[Measure.ownPieceCount.ordinal()] = allPieces.piecesOfColor(color).size();
+		value[Measure.opponentPieceCount.ordinal()] = allPieces.piecesOfColor(color.opposite()).size();
 		
 		BoardCellSet corners = board.getCellsOfType(BoardCell.Type.CORNER);
-		ownCorners = corners.piecesOfColor(color).size();
-		opponentCorners = corners.piecesOfColor(color.opposite()).size();
+		value[Measure.ownCorners.ordinal()] = corners.piecesOfColor(color).size();
+		value[Measure.opponentCorners.ordinal()] = corners.piecesOfColor(color.opposite()).size();
 		
 		BoardCellSet xcells = board.getCellsOfType(BoardCell.Type.X);
-		ownXcells = xcells.piecesOfColor(color).size();
-		opponentXcells = xcells.piecesOfColor(color.opposite()).size();
+		value[Measure.ownXcells.ordinal()] = xcells.piecesOfColor(color).size();
+		value[Measure.opponentXcells.ordinal()] = xcells.piecesOfColor(color.opposite()).size();
 
 		BoardCellSet ccells = board.getCellsOfType(BoardCell.Type.C);
-		ownCcells = ccells.piecesOfColor(color).size();
-		opponentCcells = ccells.piecesOfColor(color.opposite()).size();
+		value[Measure.ownCcells.ordinal()] = ccells.piecesOfColor(color).size();
+		value[Measure.opponentCcells.ordinal()] = ccells.piecesOfColor(color.opposite()).size();
 		
-		BoardCellSet acells = board.getCellsOfType(BoardCell.Type.A);
-		BoardCellSet bcells = board.getCellsOfType(BoardCell.Type.B);
-		bcells.addAll(acells);
-		ownABcells = bcells.piecesOfColor(color).size();
-		opponentABcells = bcells.piecesOfColor(color.opposite()).size();
+		BoardCellSet abcells = board.getCellsOfType(BoardCell.Type.B); abcells.addAll(board.getCellsOfType(BoardCell.Type.A));
+		value[Measure.ownABcells.ordinal()] = abcells.piecesOfColor(color).size();
+		value[Measure.opponentABcells.ordinal()] = abcells.piecesOfColor(color.opposite()).size();
+		
+		gameEnd = value[Measure.ownMobility.ordinal()] == 0 && value[Measure.opponentMobility.ordinal()] == 0;
+		
+		for(int i = 0; i < weight.length; i++)
+			weight[i] = defaultWeights[i];
 	}
 	
 	public int getValue() {
-		if(gameEnd) return 10000000 * (ownPieceCount - opponentPieceCount);
+		if(gameEnd) return 10000000 * (value[Measure.ownPieceCount.ordinal()] - value[Measure.opponentPieceCount.ordinal()]);
 		
+		int v = 0;
+		for(int i = 0; i < value.length; i++) v += value[i] * weight[i];
+		return v;
+		
+		/*
 		return 10 * ownMobility - 86 * opponentMobility
 			- 30 * ownBorderPieceCount + 25 * opponentBorderPieceCount +
 			(ownPieceCount - opponentPieceCount) * 2 * (38 - (ownPieceCount + opponentPieceCount)) +
@@ -82,15 +104,16 @@ public class BoardEvaluation {
 			200 * opponentXcells - 200 * ownXcells +
 			10 * opponentCcells - 190 * ownCcells + 
 			50 * ownABcells - 50 * opponentABcells;
+		*/
 	}
 	
 	public String getHTMLString() {
 		return "<html>" +
-			String.format("MOBILITY: own=%d, opp=%d<br>", ownMobility, opponentMobility) +
-			String.format("BORDER PIECES: own=%d, opp=%d<br>", ownBorderPieceCount, opponentBorderPieceCount) +
-			String.format("PIECE COUNT: own=%d, opp=%d<br>", ownPieceCount, opponentPieceCount) +
-			String.format("CORNERS: own=%d, opp=%d<br>", ownCorners, opponentCorners) +
-			String.format("STABLE PIECES: own=%d, opp=%d<br>", ownStablePieceCount, opponentStablePieceCount) +
+			String.format("MOBILITY: own=%d, opp=%d<br>", value[Measure.ownMobility.ordinal()], value[Measure.opponentMobility.ordinal()]) +
+			String.format("BORDER PIECES: own=%d, opp=%d<br>", value[Measure.ownBorderPieceCount.ordinal()], value[Measure.opponentBorderPieceCount.ordinal()]) +
+			String.format("PIECE COUNT: own=%d, opp=%d<br>", value[Measure.ownPieceCount.ordinal()], value[Measure.opponentPieceCount.ordinal()]) +
+			String.format("CORNERS: own=%d, opp=%d<br>", value[Measure.ownCorners.ordinal()], value[Measure.opponentCorners.ordinal()]) +
+			String.format("STABLE PIECES: own=%d, opp=%d<br>", value[Measure.ownStablePieceCount.ordinal()], value[Measure.opponentStablePieceCount.ordinal()]) +
 			"<br>" +
 			"<b>Heuristic value: " + getValue() + "</b>" + 
 			"</html>";
