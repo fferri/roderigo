@@ -1,6 +1,5 @@
 package roderigo.gui;
 
-import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -10,15 +9,12 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.EventListener;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import roderigo.Controller;
-import roderigo.ai.BoardEvaluation;
 import roderigo.struct.BoardCell;
 
 /**
@@ -38,8 +34,6 @@ public class JBoard extends JPanel implements MouseListener, MouseMotionListener
 	private BoardCell clickedCell = null;
 	private BoardCell lastMove = null;
 	private BoardCell bestMove = null;
-	
-	Map<BoardCell, BoardEvaluation> allHeuristics = new HashMap<BoardCell, BoardEvaluation>();
 	
 	// metrics used by paint and mouse operations:
 	public class Metrics {
@@ -89,10 +83,6 @@ public class JBoard extends JPanel implements MouseListener, MouseMotionListener
 	public BoardCell mouseCoordsToBoardCell(int x, int y) {
 		Metrics m = getMetrics();
 		return controller.getBoard().get(y / m.cell, x / m.cell);
-	}
-	
-	public void evaluateValidMoves() {
-		allHeuristics = BoardEvaluation.evaluateAllMoves(controller.getBoard(), controller.getTurn());
 	}
 	
 	public void setBestMove(BoardCell cell) {
@@ -148,12 +138,6 @@ public class JBoard extends JPanel implements MouseListener, MouseMotionListener
 		if(validMove && c == bestMove) {
 			g.setColor(colors.bestMove);
 			g.fillRect(x + m.cell / 2 - 2, y + m.cell / 2 - 2, 4, 4);
-		}
-		
-		BoardEvaluation h = allHeuristics.get(c);
-		if(h != null) {
-			g.setColor(Color.black);
-			g.drawString("" + h.getValue(), x + m.cell / 2 - 2, y + m.cell / 2 - 2);
 		}
 		
 		if(c.isClear()) return;
@@ -226,13 +210,6 @@ public class JBoard extends JPanel implements MouseListener, MouseMotionListener
 		
 		if(hoverCell != oldHover) {
 			repaint();
-			
-			BoardEvaluation hh = allHeuristics.get(hoverCell);
-			if(hh != null) {
-				setToolTipText(hh.getHTMLString());
-			} else {
-				setToolTipText(null);
-			}
 		}
 	}
 }

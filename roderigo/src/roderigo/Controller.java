@@ -7,6 +7,7 @@ import java.util.List;
 import roderigo.ai.AIPlayer;
 import roderigo.ai.AbortException;
 import roderigo.ai.AlphaBetaPlayer;
+import roderigo.ai.BoardEvaluation;
 import roderigo.struct.Board;
 import roderigo.struct.BoardCell;
 import roderigo.struct.BoardCellColor;
@@ -27,8 +28,6 @@ public class Controller {
 	
 	private boolean dontMakeMoves = false;
 	
-	private boolean evaluateValidMoves = false;
-	
 	private boolean runAiTaskInBackground = true;
 	
 	private int searchDepth = 5;
@@ -43,7 +42,9 @@ public class Controller {
 	
 	// Controller factory
 	public static Controller newController() {
-		return newController(new AlphaBetaPlayer(), new AlphaBetaPlayer());
+		return newController(
+				new AlphaBetaPlayer(BoardEvaluation.defaultWeights),
+				new AlphaBetaPlayer(BoardEvaluation.defaultWeights));
 	}
 	
 	public static Controller newController(AIPlayer blackPlayer, AIPlayer whitePlayer) {
@@ -256,16 +257,6 @@ public class Controller {
 
 	public void setDontMakeMoves(boolean dontMakeMoves) {
 		this.dontMakeMoves = dontMakeMoves;
-		
-		notifySettingsListeners_settingsChanged();
-	}
-
-	public boolean isEvaluateValidMoves() {
-		return evaluateValidMoves;
-	}
-
-	public void setEvaluateValidMoves(boolean evaluateValidMoves) {
-		this.evaluateValidMoves = evaluateValidMoves;
 		
 		notifySettingsListeners_settingsChanged();
 	}

@@ -47,14 +47,12 @@ public class BoardEvaluation {
 	};
 	
 	private int value[];
-	private int weight[];
 	
 	private boolean gameEnd;
 
 	public BoardEvaluation(Board board, BoardCellColor color) {
 		int n = Measure.values().length;
 		value = new int[n];
-		weight = new int[n];
 		
 		value[Measure.ownMobility.ordinal()] = board.getValidMoves(color).size();
 		value[Measure.opponentMobility.ordinal()] = board.getValidMoves(color.opposite()).size();
@@ -84,13 +82,12 @@ public class BoardEvaluation {
 		value[Measure.opponentABcells.ordinal()] = abcells.piecesOfColor(color.opposite()).size();
 		
 		gameEnd = value[Measure.ownMobility.ordinal()] == 0 && value[Measure.opponentMobility.ordinal()] == 0;
-		
-		for(int i = 0; i < weight.length; i++)
-			weight[i] = defaultWeights[i];
 	}
 	
-	public int getValue() {
+	public int getValue(int weight[]) {
 		if(gameEnd) return 10000000 * (value[Measure.ownPieceCount.ordinal()] - value[Measure.opponentPieceCount.ordinal()]);
+		
+		assert weight != null && weight.length == Measure.values().length;
 		
 		int v = 0;
 		for(int i = 0; i < value.length; i++) v += value[i] * weight[i];
@@ -115,7 +112,7 @@ public class BoardEvaluation {
 			String.format("CORNERS: own=%d, opp=%d<br>", value[Measure.ownCorners.ordinal()], value[Measure.opponentCorners.ordinal()]) +
 			String.format("STABLE PIECES: own=%d, opp=%d<br>", value[Measure.ownStablePieceCount.ordinal()], value[Measure.opponentStablePieceCount.ordinal()]) +
 			"<br>" +
-			"<b>Heuristic value: " + getValue() + "</b>" + 
+			"<b>Heuristic value: " + getValue(defaultWeights) + "</b>" + 
 			"</html>";
 	}
 	
@@ -132,21 +129,23 @@ public class BoardEvaluation {
 				BoardEvaluation eval = new BoardEvaluation(b, turn);
 				allHeuristics.put(move, eval);
 				
-				if(hMin == null) hMin = eval.getValue();
-				else if(eval.getValue() < hMin) hMin = eval.getValue();
-				if(hMax == null) hMax = eval.getValue();
-				else if(eval.getValue() > hMax) hMax = eval.getValue();
+				int value = eval.getValue(defaultWeights);
+				
+				if(hMin == null) hMin = value;
+				else if(value < hMin) hMin = value;
+				if(hMax == null) hMax = value;
+				else if(value > hMax) hMax = value;
 			}
 		}
 		
-		if(!validMoves.isEmpty()) {
+		/*if(!validMoves.isEmpty()) {
 			int treshold = hMin + (hMax - hMin) * 20 / 100;
 			for(BoardEvaluation eval : allHeuristics.values()) {
 				if(eval.getValue() < treshold) {
-					//eval.flag = true;
+					eval.flag = true;
 				}
 			}
-		}
+		}*/
 		
 		return allHeuristics;
 	}

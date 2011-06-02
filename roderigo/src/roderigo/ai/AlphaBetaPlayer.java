@@ -17,13 +17,18 @@ import roderigo.struct.GameState;
 public class AlphaBetaPlayer extends AIPlayer {
 	private int maxDepth = 5;
 
+	private int weights[];
+	
 	private boolean abort = false;
 	
 	public synchronized void abort() {
 		abort = true;
 	}
 	
-	public AlphaBetaPlayer() {
+	public AlphaBetaPlayer(int weights[]) {
+		assert weights != null && weights.length == BoardEvaluation.defaultWeights.length;
+		
+		this.weights = weights;
 	}
 	
 	public int getMaxDepth() {
@@ -53,7 +58,7 @@ public class AlphaBetaPlayer extends AIPlayer {
 	}
 	
 	private int computeUtility(GameState state) {
-		return new BoardEvaluation(state.getBoard(), presentState.getTurn()).getValue();
+		return new BoardEvaluation(state.getBoard(), presentState.getTurn()).getValue(weights);
 	}
 
 	private boolean terminalTest(GameState state) {
