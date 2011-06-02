@@ -8,6 +8,7 @@ import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 
 import roderigo.ai.AIPlayer;
+import roderigo.ai.AlphaBetaPlayer;
 import roderigo.gui.JBoard;
 import roderigo.gui.JRodrigoMainWindow;
 import roderigo.struct.BoardCell;
@@ -30,7 +31,11 @@ public class Main {
 	
 	// Constructor
 	private Main() {
-		controller = Controller.newController();
+		int weights[] = {90, -10, 0, 0, 10, -5, 0, 0, 300, -30000, -200, 200, -190, 10, 50, -50};
+		controller = Controller.newController(
+				new AlphaBetaPlayer(weights),
+				new AlphaBetaPlayer(weights)
+		);
 		
 		mainWindow = new JRodrigoMainWindow(controller);
 		
@@ -80,10 +85,6 @@ public class Main {
 			
 			@Override public void move(BoardCell cell, BoardCellColor color, long time) {
 				mainWindow.jboard.setLastMove(cell);
-				
-				if(controller.isEvaluateValidMoves())
-					mainWindow.jboard.evaluateValidMoves();
-				
 				mainWindow.jboard.asyncRepaint();
 			}
 			
