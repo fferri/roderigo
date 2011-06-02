@@ -119,6 +119,8 @@ public class Controller {
 	}
 	
 	public void newGame() {
+		resetMeasureTime();
+		
 		gameState.newGame();
 		
 		notifyGameListeners_newGame(gameState);
@@ -286,6 +288,10 @@ public class Controller {
 		notifySettingsListeners_settingsChanged();
 	}
 	
+	private void resetMeasureTime() {
+		startTime[0] = startTime[1] = totalTime[0] = totalTime[1] = 0;
+	}
+	
 	private void startMeasuringTime(BoardCellColor color) {
 		if(color == null) return;
 		
@@ -310,6 +316,10 @@ public class Controller {
 		} else {
 			return 0;
 		}
+	}
+	
+	public long getTotalTime(BoardCellColor color) {
+		return totalTime[color.ordinal()];
 	}
 	
 	// GameMoveListener observer

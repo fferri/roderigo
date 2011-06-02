@@ -3,6 +3,7 @@ import java.io.PrintWriter;
 
 import roderigo.Controller;
 import roderigo.struct.Board;
+import roderigo.struct.BoardCellColor;
 
 /**
  * Take two AIs and make them play one against the other, for two matches,
@@ -32,6 +33,7 @@ public class Battle {
 		
 		endBoard.print(new PrintWriter(System.out));
 		System.out.println("finished " + b + "/" + w);
+		System.out.println("total time: " + controller.getTotalTime(BoardCellColor.BLACK) + "/" + controller.getTotalTime(BoardCellColor.WHITE));
 		System.out.flush();
 		
 		return b.compareTo(w);
