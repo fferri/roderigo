@@ -22,7 +22,7 @@ public class MainCLI {
 	
 	// Constructor
 	private MainCLI() {
-		controller = new Controller(new GameState());
+		controller = Controller.newController();
 		
 		controller.addGameListener(new Controller.GameListener() {
 			@Override public void newGame(GameState s) {}

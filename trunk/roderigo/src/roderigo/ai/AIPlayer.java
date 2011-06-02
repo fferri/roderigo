@@ -1,15 +1,25 @@
 package roderigo.ai;
 
 import roderigo.struct.BoardCell;
+import roderigo.struct.GameState;
 
 /**
- * Interface of an AI Player
+ * Abstract class of an AI Player
  * 
  * @author Federico Ferri
  *
  */
-public interface AIPlayer {
-	public void abort();
+public abstract class AIPlayer {
+	protected GameState presentState;
+
+	public AIPlayer() {
+	}
 	
-	public BoardCell getBestMove() throws AbortException;
+	public void setGameState(GameState gameState) {
+		this.presentState = gameState;
+	}
+	
+	public abstract void abort();
+	
+	public abstract BoardCell getBestMove() throws AbortException;
 }

@@ -30,7 +30,7 @@ public class Main {
 	
 	// Constructor
 	private Main() {
-		controller = new Controller(new GameState());
+		controller = Controller.newController();
 		
 		mainWindow = new JRodrigoMainWindow(controller);
 		
@@ -79,9 +79,6 @@ public class Main {
 			}
 			
 			@Override public void move(BoardCell cell, BoardCellColor color, long time) {
-				System.out.println("GAMEMOVELISTENER: " + color + " has moved in " + cell + " (took " + time + "ms)");
-				System.out.flush();
-				
 				mainWindow.jboard.setLastMove(cell);
 				
 				if(controller.isEvaluateValidMoves())

@@ -14,10 +14,8 @@ import roderigo.struct.GameState;
  * @author Federico Ferri
  *
  */
-public class AlphaBetaPlayer implements AIPlayer {
-	private GameState presentState;
-	
-	private int maxDepth;
+public class AlphaBetaPlayer extends AIPlayer {
+	private int maxDepth = 5;
 
 	private boolean abort = false;
 	
@@ -25,8 +23,14 @@ public class AlphaBetaPlayer implements AIPlayer {
 		abort = true;
 	}
 	
-	public AlphaBetaPlayer(GameState gameState, int maxDepth) {
-		this.presentState = gameState;
+	public AlphaBetaPlayer() {
+	}
+	
+	public int getMaxDepth() {
+		return maxDepth;
+	}
+	
+	public void setMaxDepth(int maxDepth) {
 		this.maxDepth = maxDepth;
 	}
 
