@@ -48,8 +48,8 @@ public class Controller {
 	
 	public static Controller newController(AIPlayer blackPlayer, AIPlayer whitePlayer) {
 		GameState gameState = new GameState();
-		blackPlayer.setGameState(gameState);
-		whitePlayer.setGameState(gameState);
+		// blackPlayer.setGameState(gameState);
+		// whitePlayer.setGameState(gameState); // done by runAITask
 		return new Controller(gameState, blackPlayer, whitePlayer);
 	}
 	
@@ -147,6 +147,8 @@ public class Controller {
 			AIPlayer aiPlayer = getAIPlayer(getTurn());
 			
 			assert aiPlayer != null;
+			
+			aiPlayer.setGameState(gameState);
 			
 			if(aiPlayer instanceof AlphaBetaPlayer)
 				((AlphaBetaPlayer) aiPlayer).setMaxDepth(searchDepth);

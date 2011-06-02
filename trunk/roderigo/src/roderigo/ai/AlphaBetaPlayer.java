@@ -53,7 +53,7 @@ public class AlphaBetaPlayer extends AIPlayer {
 	}
 	
 	private int computeUtility(GameState state) {
-		return new BoardEvaluation(state.getBoard(), null, presentState.getTurn()).getValue();
+		return new BoardEvaluation(state.getBoard(), presentState.getTurn()).getValue();
 	}
 
 	private boolean terminalTest(GameState state) {

@@ -22,10 +22,6 @@ import roderigo.struct.BoardCellSet;
  *
  */
 public class BoardEvaluation {
-	//private final Board board;
-	private final BoardCell cell;
-	//private final BoardCellColor color; // for whom is the evaluation computed?
-
 	private int ownMobility;
 	private int opponentMobility;
 	private int ownBorderPieceCount;
@@ -44,11 +40,7 @@ public class BoardEvaluation {
 	private int opponentABcells;
 	private boolean gameEnd;
 
-	public BoardEvaluation(Board board, BoardCell cell, BoardCellColor color) {
-		//this.board = board;
-		this.cell = cell;
-		//this.color = color;
-		
+	public BoardEvaluation(Board board, BoardCellColor color) {
 		ownMobility = board.getValidMoves(color).size();
 		opponentMobility = board.getValidMoves(color.opposite()).size();
 		gameEnd = ownMobility == 0 && opponentMobility == 0;
@@ -80,10 +72,6 @@ public class BoardEvaluation {
 		opponentABcells = bcells.piecesOfColor(color.opposite()).size();
 	}
 	
-	public BoardCell getCell() {
-		return cell;
-	}
-	
 	public int getValue() {
 		if(gameEnd) return 10000000 * (ownPieceCount - opponentPieceCount);
 		
@@ -105,7 +93,6 @@ public class BoardEvaluation {
 			String.format("STABLE PIECES: own=%d, opp=%d<br>", ownStablePieceCount, opponentStablePieceCount) +
 			"<br>" +
 			"<b>Heuristic value: " + getValue() + "</b>" + 
-			((cell != null) ? "<br>[Type: " + cell.getType().toString() + "]" : "") +
 			"</html>";
 	}
 	
@@ -119,7 +106,7 @@ public class BoardEvaluation {
 		for(BoardCell move : validMoves) {
 			Board b = board.clone();
 			if(b.makeMove(move, turn)) {
-				BoardEvaluation eval = new BoardEvaluation(b, move, turn);
+				BoardEvaluation eval = new BoardEvaluation(b, turn);
 				allHeuristics.put(move, eval);
 				
 				if(hMin == null) hMin = eval.getValue();
