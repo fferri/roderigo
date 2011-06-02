@@ -4,6 +4,14 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Representation of an othello board.
+ * This is responsible also of the game rules/logic, like enumerating valid moves
+ * or counting pieces.
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class Board {
 	private BoardCell boardCell[][];
 	

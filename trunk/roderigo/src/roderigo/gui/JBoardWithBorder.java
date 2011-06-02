@@ -13,6 +13,12 @@ import roderigo.Controller;
 import roderigo.struct.Board;
 import roderigo.struct.BoardCell;
 
+/**
+ * Border for <code>JBoard</code>, used for drawing edges with coordinates
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class JBoardWithBorder extends JPanel {
 	private static final long serialVersionUID = 649882899923586387L;
 	

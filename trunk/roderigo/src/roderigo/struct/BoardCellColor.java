@@ -2,6 +2,14 @@ package roderigo.struct;
 
 import java.awt.Color;
 
+/**
+ * Represents the color of a piece on the <code>Board</code>.
+ * Also used for indicating the turn, that is, the player that has
+ * to move.
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class BoardCellColor {
 	private BoardCellColor() {}
 	

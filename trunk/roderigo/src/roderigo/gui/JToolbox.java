@@ -10,6 +10,12 @@ import javax.swing.event.ChangeListener;
 
 import roderigo.Controller;
 
+/**
+ * Toolbox, part of main window
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class JToolbox extends JPanel {
 	private static final long serialVersionUID = -3897492433424480914L;
 	

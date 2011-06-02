@@ -8,6 +8,12 @@ import roderigo.struct.BoardCell;
 import roderigo.struct.BoardCellColor;
 import roderigo.struct.GameState;
 
+/**
+ * Entry point of the application (CLI)
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class MainCLI {
 	private final Controller controller;
 	

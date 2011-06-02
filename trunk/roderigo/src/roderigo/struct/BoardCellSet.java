@@ -2,6 +2,13 @@ package roderigo.struct;
 
 import java.util.HashSet;
 
+/**
+ * A <code>Set</code> of <code>BoardCell</code> elements with some additional utility
+ * functions.
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class BoardCellSet extends HashSet<BoardCell> {
 	private static final long serialVersionUID = -3949663115732496052L;
 

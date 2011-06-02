@@ -1,5 +1,11 @@
 package roderigo.ai;
 
+/**
+ * Alpha-Beta bean, used by <code>AlphaBetaPlayer</code>
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class AlphaBeta {
 	private int alpha;
 	private int beta;

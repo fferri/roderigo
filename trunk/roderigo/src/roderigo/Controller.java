@@ -13,6 +13,14 @@ import roderigo.struct.BoardCellColor;
 import roderigo.struct.BoardCellSet;
 import roderigo.struct.GameState;
 
+/**
+ * Controller handles the flow of the game.
+ * Makes heavy use of Observer pattern (all the listener boilerplate code at the end
+ * of this class) to achieve decoupling between GUI classes and logic.
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class Controller {
 	private boolean aiPlaysWhite = true;
 	private boolean aiPlaysBlack = false;
@@ -254,8 +262,8 @@ public class Controller {
 		if(startTime[i] == 0) {
 			startTime[i] = System.currentTimeMillis();
 		} else {
-			System.err.println("WARNING: startMeasuringTime(" + color + ") called multiple times");
-			System.err.flush();
+			//System.err.println("WARNING: startMeasuringTime(" + color + ") called multiple times");
+			//System.err.flush();
 		}
 	}
 	
