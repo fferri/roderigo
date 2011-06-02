@@ -34,13 +34,29 @@ public class Controller {
 	private int searchDepth = 5;
 	
 	private final GameState gameState;
+	private final AIPlayer blackPlayer;
+	private final AIPlayer whitePlayer;
 	
 	// time measurement
 	private long startTime[] = new long[2];
 	private long totalTime[] = new long[2];
 	
-	public Controller(GameState gameState) {
+	// Controller factory
+	public static Controller newController() {
+		return newController(new AlphaBetaPlayer(), new AlphaBetaPlayer());
+	}
+	
+	public static Controller newController(AIPlayer blackPlayer, AIPlayer whitePlayer) {
+		GameState gameState = new GameState();
+		blackPlayer.setGameState(gameState);
+		whitePlayer.setGameState(gameState);
+		return new Controller(gameState, blackPlayer, whitePlayer);
+	}
+	
+	private Controller(GameState gameState, AIPlayer blackPlayer, AIPlayer whitePlayer) {
 		this.gameState = gameState;
+		this.blackPlayer = blackPlayer;
+		this.whitePlayer = whitePlayer;
 	}
 	
 	public void startGame() {
@@ -90,10 +106,15 @@ public class Controller {
 	
 	public boolean isAITurn() {
 		BoardCellColor turn = gameState.getTurn();
-		if(turn == BoardCellColor.BLACK)
-			return aiPlaysBlack;
-		if(turn == BoardCellColor.WHITE)
-			return aiPlaysWhite;
+		AIPlayer aiPlayer = getAIPlayer(turn);
+		
+		if(aiPlayer == null) return false;
+		
+		if(turn == BoardCellColor.BLACK && aiPlaysBlack)
+			return true;
+		if(turn == BoardCellColor.WHITE && aiPlaysWhite)
+			return true;
+		
 		return false;
 	}
 	
@@ -112,28 +133,39 @@ public class Controller {
 		}
 	}
 	
+	private AIPlayer getAIPlayer(BoardCellColor turn) {
+		if(turn == BoardCellColor.WHITE)
+			return whitePlayer;
+		if(turn == BoardCellColor.BLACK)
+			return blackPlayer;
+		return null;
+	}
+	
 	private void runAITask_forReal() {
-		AIPlayer aiPlayer = new AlphaBetaPlayer(gameState, getSearchDepth());
-		notifyAiTaskListeners_computationStart(aiPlayer);
-
-		boolean aborted = false;
-		
 		while(isAITurn()) {
+			// Get the AI which has to play now
+			AIPlayer aiPlayer = getAIPlayer(getTurn());
+			
+			assert aiPlayer != null;
+			
+			if(aiPlayer instanceof AlphaBetaPlayer)
+				((AlphaBetaPlayer) aiPlayer).setMaxDepth(searchDepth);
+			
+			
 			BoardCell bestMove = null;
+			notifyAiTaskListeners_computationStart(aiPlayer);
 			try {
 				bestMove = aiPlayer.getBestMove();
+				notifyAiTaskListeners_computationEnd(aiPlayer);
 			} catch(AbortException e) {
-				aborted = true;
+				notifyAiTaskListeners_computationAborted(aiPlayer);
 				startTime[getTurn().ordinal()] = 0;
 			}
 			
 			BoardCellColor oldTurn = getTurn();
 			long time = stopMeasuringTime(oldTurn);
 			
-			if(bestMove == null) {
-				// something wrong with the AIPlayer...
-				break;
-			}
+			assert bestMove != null;
 			
 			if(dontMakeMoves) {
 				notifyGameMoveListeners_hint(bestMove, getTurn());
@@ -151,9 +183,6 @@ public class Controller {
 			}
 		}
 		
-		if(aborted) notifyAiTaskListeners_computationAborted(aiPlayer);
-		else notifyAiTaskListeners_computationEnd(aiPlayer);
-
 		checkEndGame();
 	}
 	
