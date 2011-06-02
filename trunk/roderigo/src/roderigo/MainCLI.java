@@ -37,7 +37,7 @@ public class MainCLI {
 					System.out.println(color + " has to pass.");
 			}
 			
-			@Override public void move(BoardCell cell, BoardCellColor color) {
+			@Override public void move(BoardCell cell, BoardCellColor color, long time) {
 				out.println("Computer moves to " + cell.toString());
 
 				controller.getBoard().print(out);
@@ -73,7 +73,7 @@ public class MainCLI {
 		while(controller.getTurn() != null) {
 			controller.continueGame();
 			controller.getBoard().print(out);
-			controller.getGameState().move(readPosition());
+			controller.move(readPosition());
 		}
 	}
 	

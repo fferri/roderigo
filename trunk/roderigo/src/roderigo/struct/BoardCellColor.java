@@ -17,6 +17,12 @@ public class BoardCellColor {
 		return Color.gray;
 	}
 	
+	public int ordinal() {
+		if(this == BLACK) return 0;
+		if(this == WHITE) return 1;
+		return -1;
+	}
+	
 	public BoardCellColor opposite() {
 		return flip(this);
 	}

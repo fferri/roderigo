@@ -105,7 +105,7 @@ public class BoardEvaluation {
 		
 		for(BoardCell move : validMoves) {
 			Board b = board.clone();
-			if(b.makeMove(b.get(move.row, move.col), turn)) {
+			if(b.makeMove(move, turn)) {
 				BoardEvaluation eval = new BoardEvaluation(b, move, turn);
 				allHeuristics.put(move, eval);
 				

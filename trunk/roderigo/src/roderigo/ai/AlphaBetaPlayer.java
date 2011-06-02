@@ -3,7 +3,7 @@ package roderigo.ai;
 import java.util.ArrayList;
 import java.util.List;
 
-import roderigo.Controller;
+import roderigo.struct.Board;
 import roderigo.struct.BoardCell;
 import roderigo.struct.BoardCellSet;
 import roderigo.struct.GameState;
@@ -19,22 +19,25 @@ public class AlphaBetaPlayer implements AIPlayer {
 		abort = true;
 	}
 	
-	public AlphaBetaPlayer(Controller controller) {
-		this.presentState = controller.getGameState();
-		
-		this.maxDepth = controller.getSearchDepth();
+	public AlphaBetaPlayer(GameState gameState, int maxDepth) {
+		this.presentState = gameState;
+		this.maxDepth = maxDepth;
 	}
 
-	private List<GameState> getSuccessorStates(GameState state) {
-		List<GameState> result = new ArrayList<GameState>();
+	private List<GameStateWithHeuristic> getSuccessorStates(GameState state) {
+		List<GameStateWithHeuristic> result = new ArrayList<GameStateWithHeuristic>();
 		
 		BoardCellSet moves = state.getBoard().getValidMoves(state.getTurn());
 		
 		for(BoardCell move : moves) {
-			GameState newState = new GameState(state);
+			GameStateWithHeuristic newState = new GameStateWithHeuristic(state);
 			newState.move(move);
+			//newState.h = newState.getTurn() != null ? new BoardEvaluation(newState.getBoard(), null, newState.getTurn()).getValue() : 0;
 			result.add(newState);
 		}
+		
+		//Collections.sort(result);
+		//Collections.reverse(result);
 		
 		return result;
 	}
@@ -47,15 +50,25 @@ public class AlphaBetaPlayer implements AIPlayer {
 		return state.getTurn() == null;
 	}
 
-	private int maxValue(GameState state, AlphaBeta ab, int depth) throws AbortException {
+	/**
+	 * Do a MAX move. If <param>ab</param> is null, behaves like classical MIN-MAX;
+	 * otherwise it uses alpha-beta pruning.
+	 * 
+	 * @param state Starting point
+	 * @param ab Alpha-beta bean
+	 * @param depth Param used to limit depth
+	 * @return The computed max value
+	 * @throws AbortException
+	 */
+	private int maxValue(GameStateWithHeuristic state, AlphaBeta ab, int depth) throws AbortException {
 		if(abort) throw new AbortException();
 		int v = Integer.MIN_VALUE;
 		if(terminalTest(state) || depth >= maxDepth) {
 			return computeUtility(state);
 		} else {
-			List<GameState> successorList = getSuccessorStates(state);
+			List<GameStateWithHeuristic> successorList = getSuccessorStates(state);
 			for(int i = 0; i < successorList.size(); i++) {
-				GameState successor = (GameState) successorList.get(i);
+				GameStateWithHeuristic successor = successorList.get(i);
 				int minimumValueOfSuccessor = minValue(successor, ab != null ? ab.clone() : null, depth + 1);
 				if(minimumValueOfSuccessor > v) {
 					v = minimumValueOfSuccessor;
@@ -73,15 +86,25 @@ public class AlphaBetaPlayer implements AIPlayer {
 		}
 	}
 	
-	private int minValue(GameState state, AlphaBeta ab, int depth) throws AbortException {
+	/**
+	 * Do a MIN move. If <param>ab</param> is null, behaves like classical MIN-MAX;
+	 * otherwise it uses alpha-beta pruning.
+	 * 
+	 * @param state Starting point
+	 * @param ab Alpha-beta bean
+	 * @param depth Param used to limit depth
+	 * @return The computed min value
+	 * @throws AbortException
+	 */
+	private int minValue(GameStateWithHeuristic state, AlphaBeta ab, int depth) throws AbortException {
 		if(abort) throw new AbortException();
 		int v = Integer.MAX_VALUE;
 		if(terminalTest(state) || depth >= maxDepth) {
 			return computeUtility(state);
 		} else {
-			List<GameState> successorList = getSuccessorStates(state);
+			List<GameStateWithHeuristic> successorList = getSuccessorStates(state);
 			for(int i = 0; i < successorList.size(); i++) {
-				GameState successor = successorList.get(i);
+				GameStateWithHeuristic successor = successorList.get(i);
 				int maximumValueOfSuccessor = maxValue(successor, ab != null ? ab.clone() : null, depth + 1);
 				if(maximumValueOfSuccessor < v) {
 					v = maximumValueOfSuccessor;
@@ -100,24 +123,26 @@ public class AlphaBetaPlayer implements AIPlayer {
 	}
 	
 	public BoardCell getBestMove() throws AbortException {
-		BoardCellSet moves = presentState.getBoard().getValidMoves(presentState.getTurn());
+		Board board = presentState.getBoard(); // the original board
+		BoardCellSet moves = board.getValidMoves(presentState.getTurn());
 		if(moves.size() == 1) return moves.iterator().next();
 		
 		abort = false;
-		BoardCell bestMove = null;
-		try {
-			maxValue(presentState, new AlphaBeta(Integer.MIN_VALUE, Integer.MAX_VALUE), 0);
-			GameState nextState = presentState.getNext();
-			if(nextState == null)
-				throw new RuntimeException("AlphaBetaPlayer made a BOO-BOO");
-			
-			bestMove = nextState.getLastMove();
-		} catch(AbortException e) {
-			System.out.println("ALPHABETA-PLAYER ABORTED.");
-		}
+
+		GameStateWithHeuristic presentStateH = new GameStateWithHeuristic(presentState);
+		maxValue(presentStateH, new AlphaBeta(Integer.MIN_VALUE, Integer.MAX_VALUE), 0);
+		GameStateWithHeuristic nextState = presentStateH.getNext();
+		if(nextState == null)
+			throw new RuntimeException("AlphaBetaPlayer made a BOO-BOO");
 		
-		if(abort) throw new AbortException();
-		
-		return bestMove;
+		/* introducing GameStateWithHeuristic, I introduced a cloning
+		 * of the Board, which implies cloning the BoardCells
+		 * 
+		 * thus, simply returning nextState.getLastMove() would return
+		 * a cell of another board, not the original board
+		 * 
+		 * (caused a bug in paint, which checked for lastMove using ==)
+		 */
+		return board.conformCell(nextState.getLastMove());
 	}
 }

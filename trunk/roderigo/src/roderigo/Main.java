@@ -1,7 +1,6 @@
 package roderigo;
 
 import java.awt.event.ActionEvent;
-import java.io.PrintWriter;
 
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
@@ -46,6 +45,15 @@ public class Main {
 			}
 		});
 		
+		controller.addSettingsListener(new Controller.SettingsListener() {
+			@Override public void settingsChanged() {
+				// sync stateful menu items
+				mainWindow.menuItemAIPlaysBlack.setSelected(controller.isAiPlaysBlack());
+				mainWindow.menuItemAIPlaysWhite.setSelected(controller.isAiPlaysWhite());
+				mainWindow.menuItemDontMakeMoves.setSelected(controller.isDontMakeMoves());
+			}
+		});
+		
 		controller.addGameListener(new Controller.GameListener() {
 			@Override public void newGame(GameState s) {}
 			
@@ -64,7 +72,10 @@ public class Main {
 					JOptionPane.showMessageDialog(mainWindow, color + " has to pass.", null, JOptionPane.INFORMATION_MESSAGE);
 			}
 			
-			@Override public void move(BoardCell cell, BoardCellColor color) {
+			@Override public void move(BoardCell cell, BoardCellColor color, long time) {
+				System.out.println("GAMEMOVELISTENER: " + color + " has moved in " + cell + " (took " + time + "ms)");
+				System.out.flush();
+				
 				mainWindow.jboard.setLastMove(cell);
 				
 				if(controller.isEvaluateValidMoves())
@@ -91,16 +102,18 @@ public class Main {
 		
 		mainWindow.jboard.addCellListener(new JBoard.CellListener() {
 			@Override public void cellClicked(BoardCell cell) {
-				BoardCellColor turn = controller.getGameState().getTurn();
+				BoardCellColor turn = controller.getTurn();
 				
 				if(turn == null) return;
 				
 				if(!controller.isAITurn()) {
 					// human turn
-					boolean valid = controller.getGameState().move(cell);
+					boolean valid = controller.move(cell);
 					
 					if(valid) {
-						mainWindow.jboard.asyncRepaint();
+						// following two already happen in the move listener:
+						//mainWindow.jboard.setLastMove(cell);
+						//mainWindow.jboard.asyncRepaint();
 						controller.continueGame();
 					} else {
 						//JOptionPane.showMessageDialog(mainWindow, "Invalid move", "Error", JOptionPane.ERROR_MESSAGE);
@@ -111,7 +124,6 @@ public class Main {
 	}
 	
 	public void run() {
-		controller.getBoard().print(new PrintWriter(System.out));
 		controller.startGame();
 	}
 	

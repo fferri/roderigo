@@ -128,7 +128,7 @@ public class JRodrigoMainWindow extends JFrame {
 		
 		@Override
 		public void actionPerformed(ActionEvent evt) {
-			controller.getGameState().switchTurn();
+			controller.switchTurn();
 			controller.continueGame();
 		}
 	}
