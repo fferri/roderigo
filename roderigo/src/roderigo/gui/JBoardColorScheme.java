@@ -2,6 +2,12 @@ package roderigo.gui;
 
 import java.awt.Color;
 
+/**
+ * Default color scheme of <code>JBoard</code>
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class JBoardColorScheme {
 	public final Color bg = new Color(105, 185, 90);
 	public final Color bgHilight = new Color(135, 200, 130);

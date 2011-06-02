@@ -8,6 +8,12 @@ import roderigo.struct.BoardCell;
 import roderigo.struct.BoardCellSet;
 import roderigo.struct.GameState;
 
+/**
+ * Implementation of <code>AIPlayer</code> using MIN-MAX optionally with alpha-beta pruning
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class AlphaBetaPlayer implements AIPlayer {
 	private GameState presentState;
 	

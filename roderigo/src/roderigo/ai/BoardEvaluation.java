@@ -8,6 +8,19 @@ import roderigo.struct.BoardCell;
 import roderigo.struct.BoardCellColor;
 import roderigo.struct.BoardCellSet;
 
+/**
+ * Evaluation of board, based on the following heuristics:
+ * <ul>
+ * <li>Mobility
+ * <li>Corners
+ * <li>Edges
+ * <li>Partial influence map (only A, B, C, X cells)
+ * <li>Piece count
+ * </ul>
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class BoardEvaluation {
 	//private final Board board;
 	private final BoardCell cell;

@@ -3,6 +3,13 @@ package roderigo.struct;
 import java.util.Arrays;
 import java.util.Collection;
 
+/**
+ * Represents one of the eight directions of the board, used by <code>Board</code>
+ * algorithms for example when capturing pieces.
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class Direction {
 	private int dr;
 	private int dc;

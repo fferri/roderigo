@@ -17,8 +17,15 @@ import javax.swing.border.BevelBorder;
 
 import roderigo.Controller;
 
-@SuppressWarnings("serial")
+/**
+ * Main window (mostly menus and actions).
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class JRodrigoMainWindow extends JFrame {
+	private static final long serialVersionUID = -4557956167009063512L;
+	
 	public final JMenuBar menuBar;
 	public final JMenu menuTopGame;
 	public final JMenuItem menuItemNewGame;
@@ -91,6 +98,8 @@ public class JRodrigoMainWindow extends JFrame {
 	}
 	
 	public class ActionNewGame extends AbstractAction {
+		private static final long serialVersionUID = -558109213799048622L;
+
 		public ActionNewGame() {
 			super("New game", null);
 			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke("control N"));
@@ -107,6 +116,8 @@ public class JRodrigoMainWindow extends JFrame {
 	}
 	
 	public class ActionWakeUpAI extends AbstractAction {
+		private static final long serialVersionUID = 381200342750521620L;
+
 		public ActionWakeUpAI() {
 			super("Wake up AI", null);
 			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke("control P"));
@@ -120,6 +131,8 @@ public class JRodrigoMainWindow extends JFrame {
 	}
 	
 	public class ActionSwapTurn extends AbstractAction {
+		private static final long serialVersionUID = 4685312048761895903L;
+
 		public ActionSwapTurn() {
 			super("Swap turn", null);
 			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke("control S"));
@@ -134,6 +147,8 @@ public class JRodrigoMainWindow extends JFrame {
 	}
 	
 	public class ActionQuit extends AbstractAction {
+		private static final long serialVersionUID = -342180331257689078L;
+
 		public ActionQuit() {
 			super("Quit game", null);
 			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke("control Q"));
@@ -147,6 +162,8 @@ public class JRodrigoMainWindow extends JFrame {
 	}
 
 	public class ActionToggleOption extends AbstractAction {
+		private static final long serialVersionUID = 4507598639206049958L;
+		
 		private JCheckBoxMenuItem menuItem;
 		private Method controllerMethod;
 		

@@ -1,5 +1,17 @@
 package roderigo.struct;
 
+/**
+ * A cell on the board.
+ * Can be only created by <code>Board</code>.
+ * 
+ * Each cell is unique and belong to its board.
+ * 
+ * There will be no two cells with same row, column and board,
+ * thus cells can be compared (for equality) with ==
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class BoardCell {
 	private final transient Board board;
 	public final int row, col;

@@ -14,6 +14,12 @@ import roderigo.struct.BoardCell;
 import roderigo.struct.BoardCellColor;
 import roderigo.struct.GameState;
 
+/**
+ * Entry point of the application (GUI)
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class Main {
 	private final Controller controller;
 	

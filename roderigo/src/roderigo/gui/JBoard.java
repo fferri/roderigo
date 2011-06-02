@@ -21,6 +21,12 @@ import roderigo.Controller;
 import roderigo.ai.BoardEvaluation;
 import roderigo.struct.BoardCell;
 
+/**
+ * GUI representation of <code>Board</code>
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class JBoard extends JPanel implements MouseListener, MouseMotionListener {
 	private static final long serialVersionUID = 5041436229495994615L;
 	
