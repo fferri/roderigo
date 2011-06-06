@@ -279,6 +279,17 @@ public class Controller {
 		notifySettingsListeners_settingsChanged();
 	}
 	
+	public boolean isAI(BoardCellColor color) {
+		if(color == BoardCellColor.BLACK) {
+			return isAiPlaysBlack();
+		} else if(color == BoardCellColor.WHITE) {
+			return isAiPlaysWhite();
+		} else {
+			// XXX:
+			return false;
+		}
+	}
+	
 	private void resetMeasureTime() {
 		startTime[0] = startTime[1] = totalTime[0] = totalTime[1] = 0;
 	}
