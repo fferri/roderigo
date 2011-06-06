@@ -396,8 +396,17 @@ public class Board {
 	 * @param pw The <code>PrintWriter</code> used for printing the board
 	 */
 	public void print(PrintWriter pw) {
+		print(pw, true);
+	}
+	
+	public void print(PrintWriter pw, boolean wide) {
 		// header:
-		pw.println("   abcdefgh");
+		pw.print("   ");
+		String hdr[] = {"a", "b", "c", "d", "e", "f", "g", "h"};
+		for(String h : hdr) pw.print(h + (wide ? " " : ""));
+		pw.println("");
+		
+		// rows:
 		for(int row = 0; row < getNumRows(); row++) {
 			pw.print("" + (row+1) + ": ");
 			for(int col = 0; col < getNumColumns(); col++) {
@@ -408,6 +417,8 @@ public class Board {
 					pw.print("*");
 				else if(cell.isWhite())
 					pw.print("o");
+				if(wide)
+					pw.print(" ");
 			}
 			pw.println("");
 		}
