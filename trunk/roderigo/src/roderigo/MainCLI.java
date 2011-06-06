@@ -24,6 +24,9 @@ public class MainCLI {
 	private MainCLI() {
 		controller = Controller.newController();
 		
+		// no multithread
+		controller.setRunAiTaskInBackground(false);
+		
 		controller.addGameListener(new Controller.GameListener() {
 			@Override public void newGame(GameState s) {}
 			
@@ -39,21 +42,17 @@ public class MainCLI {
 		
 		controller.addGameMoveListener(new Controller.GameMoveListener() {
 			@Override public void pass(BoardCellColor color) {
-				if(!controller.isAiPlaysBlack() || !controller.isAiPlaysWhite())
-					System.out.println(color + " has to pass.");
+				out.println(playerName(color) + " has to pass.");
 			}
 			
 			@Override public void move(BoardCell cell, BoardCellColor color, long time) {
-				out.println("Computer moves to " + cell.toString());
-
-				controller.getBoard().print(out);
-			}
-			
-			@Override public void hint(BoardCell cell, BoardCellColor color) {
-				out.println("best move for " + color + " would be " + cell);
+				if(controller.isAI(color))
+					out.println(playerName(color) + " moves to " + cell.toString());
 				
 				controller.getBoard().print(out);
 			}
+			
+			@Override public void hint(BoardCell cell, BoardCellColor color) {}
 		});
 	}
 	
@@ -75,10 +74,15 @@ public class MainCLI {
 		return pos;
 	}
 	
+	private String playerName(BoardCellColor color) {
+		return controller.isAI(color) ? "Computer" : "Human";
+	}
+	
 	public void run() {
+		controller.getBoard().print(out);
+		
 		while(controller.getTurn() != null) {
 			controller.continueGame();
-			controller.getBoard().print(out);
 			controller.move(readPosition());
 		}
 	}
