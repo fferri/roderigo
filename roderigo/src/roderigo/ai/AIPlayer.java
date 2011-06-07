@@ -9,17 +9,14 @@ import roderigo.struct.GameState;
  * @author Federico Ferri
  *
  */
-public abstract class AIPlayer {
-	protected GameState presentState;
-
-	public AIPlayer() {
-	}
+public interface AIPlayer {
+	public void abort();
 	
-	public void setGameState(GameState gameState) {
-		this.presentState = gameState;
-	}
-	
-	public abstract void abort();
-	
-	public abstract BoardCell getBestMove() throws AbortException;
+	/**
+	 * From the given starting state, compute the best move
+	 * @param presentState
+	 * @return
+	 * @throws AbortException
+	 */
+	public BoardCell getBestMove(GameState presentState) throws AbortException;
 }

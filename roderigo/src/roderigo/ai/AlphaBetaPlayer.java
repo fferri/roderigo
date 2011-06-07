@@ -14,12 +14,14 @@ import roderigo.struct.GameState;
  * @author Federico Ferri
  *
  */
-public class AlphaBetaPlayer extends AIPlayer {
+public class AlphaBetaPlayer implements AIPlayer {
 	private int maxDepth = 5;
 
 	private int weights[];
 	
 	private boolean abort = false;
+	
+	private GameState presentState = null;
 	
 	public synchronized void abort() {
 		abort = true;
@@ -137,7 +139,9 @@ public class AlphaBetaPlayer extends AIPlayer {
 		}
 	}
 	
-	public BoardCell getBestMove() throws AbortException {
+	public BoardCell getBestMove(GameState presentState) throws AbortException {
+		this.presentState = presentState;
+		
 		Board board = presentState.getBoard(); // the original board
 		BoardCellSet moves = board.getValidMoves(presentState.getTurn());
 		if(moves.size() == 1) return moves.iterator().next();
