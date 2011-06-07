@@ -151,8 +151,6 @@ public class Controller {
 			
 			assert aiPlayer != null;
 			
-			aiPlayer.setGameState(gameState);
-			
 			if(aiPlayer instanceof AlphaBetaPlayer)
 				((AlphaBetaPlayer) aiPlayer).setMaxDepth(searchDepth);
 			
@@ -160,7 +158,7 @@ public class Controller {
 			BoardCell bestMove = null;
 			notifyAiTaskListeners_computationStart(aiPlayer);
 			try {
-				bestMove = aiPlayer.getBestMove();
+				bestMove = aiPlayer.getBestMove(gameState);
 				notifyAiTaskListeners_computationEnd(aiPlayer);
 			} catch(AbortException e) {
 				notifyAiTaskListeners_computationAborted(aiPlayer);
