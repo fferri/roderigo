@@ -3,6 +3,8 @@ package roderigo.ai;
 import java.util.HashMap;
 import java.util.Map;
 
+import roderigo.ai.genetic.Genome;
+import roderigo.ai.genetic.Genome.Bit;
 import roderigo.struct.Board;
 import roderigo.struct.BoardCell;
 import roderigo.struct.BoardCellColor;
@@ -22,97 +24,69 @@ import roderigo.struct.BoardCellSet;
  * @author Federico Ferri
  *
  */
-public class BoardEvaluation {
-	public static enum Measure {
-		ownMobility,
-		opponentMobility,
-		ownBorderPieceCount,
-		opponentBorderPieceCount,
-		ownPieceCount,
-		opponentPieceCount,
-		ownStablePieceCount,
-		opponentStablePieceCount,
-		ownCorners,
-		opponentCorners,
-		ownXcells,
-		opponentXcells,
-		ownCcells,
-		opponentCcells,
-		ownABcells,
-		opponentABcells
-	};
-	
-	public static final int defaultWeights[] = {
-		10, -86, -30, 25, 0, 0, 0, 0, 30000, -30000, -200, 200, -190, 10, 50, -50
-	};
-	
+public class BoardEvaluation {	
 	private int value[];
 	
 	private boolean gameEnd;
 
 	public BoardEvaluation(Board board, BoardCellColor color) {
-		int n = Measure.values().length;
+		int n = Genome.Bit.values().length;
 		value = new int[n];
 		
-		value[Measure.ownMobility.ordinal()] = board.getValidMoves(color).size();
-		value[Measure.opponentMobility.ordinal()] = board.getValidMoves(color.opposite()).size();
+		value[Genome.Bit.ownMobility.ordinal()] = board.getValidMoves(color).size();
+		value[Genome.Bit.opponentMobility.ordinal()] = board.getValidMoves(color.opposite()).size();
 		
 		BoardCellSet border = board.getBorder();
-		value[Measure.ownBorderPieceCount.ordinal()] = border.piecesOfColor(color).size();
-		value[Measure.opponentBorderPieceCount.ordinal()] = border.piecesOfColor(color.opposite()).size();
+		value[Genome.Bit.ownBorderPieceCount.ordinal()] = border.piecesOfColor(color).size();
+		value[Genome.Bit.opponentBorderPieceCount.ordinal()] = border.piecesOfColor(color.opposite()).size();
 		
 		BoardCellSet allPieces = board.getAllPieces();
-		value[Measure.ownPieceCount.ordinal()] = allPieces.piecesOfColor(color).size();
-		value[Measure.opponentPieceCount.ordinal()] = allPieces.piecesOfColor(color.opposite()).size();
+		value[Genome.Bit.ownPieceCount.ordinal()] = allPieces.piecesOfColor(color).size();
+		value[Genome.Bit.opponentPieceCount.ordinal()] = allPieces.piecesOfColor(color.opposite()).size();
 		
 		BoardCellSet corners = board.getCellsOfType(BoardCell.Type.CORNER);
-		value[Measure.ownCorners.ordinal()] = corners.piecesOfColor(color).size();
-		value[Measure.opponentCorners.ordinal()] = corners.piecesOfColor(color.opposite()).size();
+		value[Genome.Bit.ownCorners.ordinal()] = corners.piecesOfColor(color).size();
+		value[Genome.Bit.opponentCorners.ordinal()] = corners.piecesOfColor(color.opposite()).size();
 		
 		BoardCellSet xcells = board.getCellsOfType(BoardCell.Type.X);
-		value[Measure.ownXcells.ordinal()] = xcells.piecesOfColor(color).size();
-		value[Measure.opponentXcells.ordinal()] = xcells.piecesOfColor(color.opposite()).size();
+		value[Genome.Bit.ownXcells.ordinal()] = xcells.piecesOfColor(color).size();
+		value[Genome.Bit.opponentXcells.ordinal()] = xcells.piecesOfColor(color.opposite()).size();
 
 		BoardCellSet ccells = board.getCellsOfType(BoardCell.Type.C);
-		value[Measure.ownCcells.ordinal()] = ccells.piecesOfColor(color).size();
-		value[Measure.opponentCcells.ordinal()] = ccells.piecesOfColor(color.opposite()).size();
+		value[Genome.Bit.ownCcells.ordinal()] = ccells.piecesOfColor(color).size();
+		value[Genome.Bit.opponentCcells.ordinal()] = ccells.piecesOfColor(color.opposite()).size();
 		
 		BoardCellSet abcells = board.getCellsOfType(BoardCell.Type.B); abcells.addAll(board.getCellsOfType(BoardCell.Type.A));
-		value[Measure.ownABcells.ordinal()] = abcells.piecesOfColor(color).size();
-		value[Measure.opponentABcells.ordinal()] = abcells.piecesOfColor(color.opposite()).size();
+		value[Genome.Bit.ownABcells.ordinal()] = abcells.piecesOfColor(color).size();
+		value[Genome.Bit.opponentABcells.ordinal()] = abcells.piecesOfColor(color.opposite()).size();
 		
-		gameEnd = value[Measure.ownMobility.ordinal()] == 0 && value[Measure.opponentMobility.ordinal()] == 0;
+		gameEnd = value[Genome.Bit.ownMobility.ordinal()] == 0 && value[Genome.Bit.opponentMobility.ordinal()] == 0;
 	}
 	
-	public int getValue(int weight[]) {
-		if(gameEnd) return 10000000 * (value[Measure.ownPieceCount.ordinal()] - value[Measure.opponentPieceCount.ordinal()]);
-		
-		assert weight != null && weight.length == Measure.values().length;
-		
-		int v = 0;
-		for(int i = 0; i < value.length; i++) v += value[i] * weight[i];
-		return v;
-		
-		/*
-		return 10 * ownMobility - 86 * opponentMobility
-			- 30 * ownBorderPieceCount + 25 * opponentBorderPieceCount +
-			(ownPieceCount - opponentPieceCount) * 2 * (38 - (ownPieceCount + opponentPieceCount)) +
-			30000 * ownCorners - 30000 * opponentCorners +
-			200 * opponentXcells - 200 * ownXcells +
-			10 * opponentCcells - 190 * ownCcells + 
-			50 * ownABcells - 50 * opponentABcells;
-		*/
+	public int getValue() {
+		return getValue(Genome.DEFAULT);
+	}
+	
+	public int getValue(Genome g) {
+		if(gameEnd) {
+			return 10000000 * (value[Genome.Bit.ownPieceCount.ordinal()] - value[Genome.Bit.opponentPieceCount.ordinal()]);
+		} else {
+			int v = 0;
+			for(Bit bit : Genome.Bit.values())
+				v += value[bit.ordinal()] * g.get(bit);
+			return v;
+		}
 	}
 	
 	public String getHTMLString() {
 		return "<html>" +
-			String.format("MOBILITY: own=%d, opp=%d<br>", value[Measure.ownMobility.ordinal()], value[Measure.opponentMobility.ordinal()]) +
-			String.format("BORDER PIECES: own=%d, opp=%d<br>", value[Measure.ownBorderPieceCount.ordinal()], value[Measure.opponentBorderPieceCount.ordinal()]) +
-			String.format("PIECE COUNT: own=%d, opp=%d<br>", value[Measure.ownPieceCount.ordinal()], value[Measure.opponentPieceCount.ordinal()]) +
-			String.format("CORNERS: own=%d, opp=%d<br>", value[Measure.ownCorners.ordinal()], value[Measure.opponentCorners.ordinal()]) +
-			String.format("STABLE PIECES: own=%d, opp=%d<br>", value[Measure.ownStablePieceCount.ordinal()], value[Measure.opponentStablePieceCount.ordinal()]) +
+			String.format("MOBILITY: own=%d, opp=%d<br>", value[Genome.Bit.ownMobility.ordinal()], value[Genome.Bit.opponentMobility.ordinal()]) +
+			String.format("BORDER PIECES: own=%d, opp=%d<br>", value[Genome.Bit.ownBorderPieceCount.ordinal()], value[Genome.Bit.opponentBorderPieceCount.ordinal()]) +
+			String.format("PIECE COUNT: own=%d, opp=%d<br>", value[Genome.Bit.ownPieceCount.ordinal()], value[Genome.Bit.opponentPieceCount.ordinal()]) +
+			String.format("CORNERS: own=%d, opp=%d<br>", value[Genome.Bit.ownCorners.ordinal()], value[Genome.Bit.opponentCorners.ordinal()]) +
+			String.format("STABLE PIECES: own=%d, opp=%d<br>", value[Genome.Bit.ownStablePieceCount.ordinal()], value[Genome.Bit.opponentStablePieceCount.ordinal()]) +
 			"<br>" +
-			"<b>Heuristic value: " + getValue(defaultWeights) + "</b>" + 
+			"<b>Heuristic value: " + getValue() + "</b>" + 
 			"</html>";
 	}
 	
@@ -129,7 +103,7 @@ public class BoardEvaluation {
 				BoardEvaluation eval = new BoardEvaluation(b, turn);
 				allHeuristics.put(move, eval);
 				
-				int value = eval.getValue(defaultWeights);
+				int value = eval.getValue();
 				
 				if(hMin == null) hMin = value;
 				else if(value < hMin) hMin = value;

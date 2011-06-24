@@ -7,7 +7,7 @@ import java.util.List;
 import roderigo.ai.AIPlayer;
 import roderigo.ai.AbortException;
 import roderigo.ai.AlphaBetaPlayer;
-import roderigo.ai.BoardEvaluation;
+import roderigo.ai.genetic.Genome;
 import roderigo.struct.Board;
 import roderigo.struct.BoardCell;
 import roderigo.struct.BoardCellColor;
@@ -43,12 +43,16 @@ public class Controller {
 	// Controller factory
 	public static Controller newController() {
 		return newController(
-				new AlphaBetaPlayer(BoardEvaluation.defaultWeights),
-				new AlphaBetaPlayer(BoardEvaluation.defaultWeights));
+				new AlphaBetaPlayer(Genome.DEFAULT),
+				new AlphaBetaPlayer(Genome.DEFAULT));
 	}
 	
 	public static Controller newController(AIPlayer blackPlayer, AIPlayer whitePlayer) {
-		GameState gameState = new GameState();
+		return newController(new GameState(), blackPlayer, whitePlayer);
+	}
+	
+	public static Controller newController(GameState startingState, AIPlayer blackPlayer, AIPlayer whitePlayer) {
+		GameState gameState = new GameState(startingState);
 		// blackPlayer.setGameState(gameState);
 		// whitePlayer.setGameState(gameState); // done by runAITask
 		return new Controller(gameState, blackPlayer, whitePlayer);
@@ -136,7 +140,7 @@ public class Controller {
 		}
 	}
 	
-	private AIPlayer getAIPlayer(BoardCellColor turn) {
+	public AIPlayer getAIPlayer(BoardCellColor turn) {
 		if(turn == BoardCellColor.WHITE)
 			return whitePlayer;
 		if(turn == BoardCellColor.BLACK)
@@ -275,6 +279,50 @@ public class Controller {
 		this.searchDepth = searchDepth;
 		
 		notifySettingsListeners_settingsChanged();
+	}
+	
+	public boolean isUsingDynamicDepth() {
+		if(isAiPlaysBlack() && blackPlayer instanceof AlphaBetaPlayer) {
+			AlphaBetaPlayer p = (AlphaBetaPlayer) blackPlayer;
+			return p.isUsingDynamicDepth();
+		}
+		
+		if(isAiPlaysWhite() && whitePlayer instanceof AlphaBetaPlayer) {
+			AlphaBetaPlayer p = (AlphaBetaPlayer) whitePlayer;
+			return p.isUsingDynamicDepth();
+		}
+		
+		return false;
+	}
+	
+	public void setUsingDynamicDepth(boolean usingDynamicDepth) {
+		if(blackPlayer instanceof AlphaBetaPlayer) {
+			AlphaBetaPlayer p = (AlphaBetaPlayer) blackPlayer;
+			p.setUsingDynamicDepth(usingDynamicDepth);
+		}
+		
+		if(whitePlayer instanceof AlphaBetaPlayer) {
+			AlphaBetaPlayer p = (AlphaBetaPlayer) whitePlayer;
+			p.setUsingDynamicDepth(usingDynamicDepth);
+		}
+		
+		notifySettingsListeners_settingsChanged();
+	}
+	
+	public int getDynamicSearchDepth() {
+		int sd1 = 0, sd2 = 0;
+		
+		if(isAiPlaysBlack() && blackPlayer instanceof AlphaBetaPlayer) {
+			AlphaBetaPlayer p = (AlphaBetaPlayer) blackPlayer;
+			sd1 = p.getDynamicMaxDepth();
+		}
+		
+		if(isAiPlaysWhite() && whitePlayer instanceof AlphaBetaPlayer) {
+			AlphaBetaPlayer p = (AlphaBetaPlayer) whitePlayer;
+			sd2 = p.getDynamicMaxDepth();
+		}
+		
+		return Math.max(sd1, sd2);
 	}
 	
 	public boolean isAI(BoardCellColor color) {
