@@ -1,8 +1,6 @@
 package roderigo.ai;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -160,7 +158,7 @@ public class Battle {
 		final int numCrossovers = 4;
 		final int numRandoms = 1;
 		// ----------------------------------------------------
-		assert populationSize == (kBest + numMutations + numCrossovers + numRandoms);
+		//assert populationSize == (kBest + numMutations + numCrossovers + numRandoms);
 		
 		System.out.print("Generating random startup population of " + populationSize + " players...");
 		System.out.flush();
