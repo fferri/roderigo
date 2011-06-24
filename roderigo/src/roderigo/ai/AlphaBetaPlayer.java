@@ -3,6 +3,7 @@ package roderigo.ai;
 import java.util.ArrayList;
 import java.util.List;
 
+import roderigo.ai.genetic.Genome;
 import roderigo.struct.Board;
 import roderigo.struct.BoardCell;
 import roderigo.struct.BoardCellSet;
@@ -15,9 +16,14 @@ import roderigo.struct.GameState;
  *
  */
 public class AlphaBetaPlayer implements AIPlayer {
-	private int maxDepth = 5;
+	public static final int DEFAULT_DEPTH = 5;
+	
+	private int maxDepth = DEFAULT_DEPTH;
+	private int dynamicMaxDepth = DEFAULT_DEPTH;
+	
+	private boolean usingDynamicDepth = true;
 
-	private int weights[];
+	private Genome genome;
 	
 	private boolean abort = false;
 	
@@ -27,10 +33,16 @@ public class AlphaBetaPlayer implements AIPlayer {
 		abort = true;
 	}
 	
-	public AlphaBetaPlayer(int weights[]) {
-		assert weights != null && weights.length == BoardEvaluation.defaultWeights.length;
-		
-		this.weights = weights;
+	public AlphaBetaPlayer(Genome genome) {
+		this.genome = genome;
+	}
+	
+	public Genome getGenome() {
+		return genome;
+	}
+	
+	public void setGenome(Genome genome) {
+		this.genome = genome;
 	}
 	
 	public int getMaxDepth() {
@@ -39,6 +51,18 @@ public class AlphaBetaPlayer implements AIPlayer {
 	
 	public void setMaxDepth(int maxDepth) {
 		this.maxDepth = maxDepth;
+	}
+	
+	public int getDynamicMaxDepth() {
+		return dynamicMaxDepth;
+	}
+
+	public boolean isUsingDynamicDepth() {
+		return usingDynamicDepth;
+	}
+
+	public void setUsingDynamicDepth(boolean usingDynamicDepth) {
+		this.usingDynamicDepth = usingDynamicDepth;
 	}
 
 	private List<GameStateWithHeuristic> getSuccessorStates(GameState state) {
@@ -60,7 +84,7 @@ public class AlphaBetaPlayer implements AIPlayer {
 	}
 	
 	private int computeUtility(GameState state) {
-		return new BoardEvaluation(state.getBoard(), presentState.getTurn()).getValue(weights);
+		return new BoardEvaluation(state.getBoard(), presentState.getTurn()).getValue(genome);
 	}
 
 	private boolean terminalTest(GameState state) {
@@ -80,7 +104,7 @@ public class AlphaBetaPlayer implements AIPlayer {
 	private int maxValue(GameStateWithHeuristic state, AlphaBeta ab, int depth) throws AbortException {
 		if(abort) throw new AbortException();
 		int v = Integer.MIN_VALUE;
-		if(terminalTest(state) || depth >= maxDepth) {
+		if(terminalTest(state) || depth >= dynamicMaxDepth) {
 			return computeUtility(state);
 		} else {
 			List<GameStateWithHeuristic> successorList = getSuccessorStates(state);
@@ -116,7 +140,7 @@ public class AlphaBetaPlayer implements AIPlayer {
 	private int minValue(GameStateWithHeuristic state, AlphaBeta ab, int depth) throws AbortException {
 		if(abort) throw new AbortException();
 		int v = Integer.MAX_VALUE;
-		if(terminalTest(state) || depth >= maxDepth) {
+		if(terminalTest(state) || depth >= dynamicMaxDepth) {
 			return computeUtility(state);
 		} else {
 			List<GameStateWithHeuristic> successorList = getSuccessorStates(state);
@@ -139,8 +163,49 @@ public class AlphaBetaPlayer implements AIPlayer {
 		}
 	}
 	
+	private void recalculateDynamicDepth() {
+		if(!usingDynamicDepth) {
+			dynamicMaxDepth = maxDepth;
+			return;
+		}
+		
+		Board b = presentState.getBoard();
+		
+		assert b.getNumRows() == 8;
+		assert b.getNumColumns() == 8;
+		
+		// how many moves played in the inner square?
+		int inner[][] = {{2, 2}, {2, 3}, {2, 4}, {2, 5},
+				{3, 2}, {3, 5}, {4, 2}, {4, 5},
+				{5, 2}, {5, 3}, {5, 4}, {5, 5}};
+		int clear = 0, occupied = 0;
+		for(int pos[] : inner) {
+			if(b.get(pos[0], pos[1]).isClear())
+				clear++;
+			else
+				occupied++;
+		}
+		
+		int totPieces = b.getAllPieces().size();
+		
+		if(occupied * 3 < inner.length * 2) {
+			dynamicMaxDepth = 3;
+		} else if(totPieces < 32) {
+			dynamicMaxDepth = 4;
+		} else if(totPieces >= 54) {
+			// play last moves at full depth
+			dynamicMaxDepth = 10;
+		} else {
+			dynamicMaxDepth = 5;
+		}
+		
+		//dynamicMaxDepth = Math.min(dynamicMaxDepth, maxDepth);
+	}
+	
 	public BoardCell getBestMove(GameState presentState) throws AbortException {
 		this.presentState = presentState;
+		
+		recalculateDynamicDepth();
 		
 		Board board = presentState.getBoard(); // the original board
 		BoardCellSet moves = board.getValidMoves(presentState.getTurn());

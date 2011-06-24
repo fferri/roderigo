@@ -29,7 +29,7 @@ public class JToolbox extends JPanel {
 		this.controller = controller;
 		
 		searchDepth.setMinimum(1);
-		searchDepth.setMaximum(9);
+		searchDepth.setMaximum(10);
 		searchDepth.setPaintTicks(true);
 		searchDepth.setSnapToTicks(true);
 		searchDepth.addChangeListener(new ChangeListener() {

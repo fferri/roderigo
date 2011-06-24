@@ -9,6 +9,7 @@ import javax.swing.KeyStroke;
 
 import roderigo.ai.AIPlayer;
 import roderigo.ai.AlphaBetaPlayer;
+import roderigo.ai.genetic.Genome;
 import roderigo.gui.JBoard;
 import roderigo.gui.JRodrigoMainWindow;
 import roderigo.struct.BoardCell;
@@ -31,10 +32,9 @@ public class Main {
 	
 	// Constructor
 	private Main() {
-		int weights[] = {90, -10, 0, 0, 10, -5, 0, 0, 300, -30000, -200, 200, -190, 10, 50, -50};
 		controller = Controller.newController(
-				new AlphaBetaPlayer(weights),
-				new AlphaBetaPlayer(weights)
+				new AlphaBetaPlayer(Genome.DEFAULT),
+				new AlphaBetaPlayer(Genome.DEFAULT)
 		);
 		
 		mainWindow = new JRodrigoMainWindow(controller);
@@ -59,9 +59,12 @@ public class Main {
 		controller.addSettingsListener(new Controller.SettingsListener() {
 			@Override public void settingsChanged() {
 				// sync stateful menu items
+				mainWindow.menuItemUseDynamicDepth.setSelected(controller.isUsingDynamicDepth());
 				mainWindow.menuItemAIPlaysBlack.setSelected(controller.isAiPlaysBlack());
 				mainWindow.menuItemAIPlaysWhite.setSelected(controller.isAiPlaysWhite());
 				mainWindow.menuItemDontMakeMoves.setSelected(controller.isDontMakeMoves());
+				
+				mainWindow.toolbox.searchDepth.setEnabled(!controller.isUsingDynamicDepth());
 			}
 		});
 		
@@ -86,6 +89,10 @@ public class Main {
 			@Override public void move(BoardCell cell, BoardCellColor color, long time) {
 				mainWindow.jboard.setLastMove(cell);
 				mainWindow.jboard.asyncRepaint();
+				
+				if(controller.isUsingDynamicDepth()) {
+					mainWindow.toolbox.searchDepth.setValue(controller.getDynamicSearchDepth());
+				}
 			}
 			
 			@Override public void hint(BoardCell cell, BoardCellColor color) {
@@ -125,6 +132,8 @@ public class Main {
 				}
 			}
 		});
+		
+		controller.setUsingDynamicDepth(false);
 	}
 	
 	public void run() {

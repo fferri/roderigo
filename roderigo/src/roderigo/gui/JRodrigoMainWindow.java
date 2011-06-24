@@ -6,16 +6,23 @@ import java.lang.reflect.Method;
 
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
 import javax.swing.border.BevelBorder;
 
 import roderigo.Controller;
+import roderigo.ai.AIPlayer;
+import roderigo.ai.AlphaBetaPlayer;
+import roderigo.ai.genetic.Genome;
+import roderigo.struct.BoardCellColor;
 
 /**
  * Main window (mostly menus and actions).
@@ -33,6 +40,7 @@ public class JRodrigoMainWindow extends JFrame {
 	public final JMenuItem menuItemWakeUpAI;
 	public final JMenuItem menuItemQuit;
 	public final JMenu menuTopOptions;
+	public final JCheckBoxMenuItem menuItemUseDynamicDepth;
 	public final JCheckBoxMenuItem menuItemDontMakeMoves;
 	public final JCheckBoxMenuItem menuItemAIPlaysBlack;
 	public final JCheckBoxMenuItem menuItemAIPlaysWhite;
@@ -66,6 +74,10 @@ public class JRodrigoMainWindow extends JFrame {
 		menuTopOptions.getAccessibleContext().setAccessibleDescription("Options menu");
 		menuBar.add(menuTopOptions);
 		
+		menuTopOptions.add(menuItemUseDynamicDepth = new JCheckBoxMenuItem());
+		menuItemUseDynamicDepth.setAction(new ActionToggleOption("Use dynamic search-depth", menuItemUseDynamicDepth, "setUsingDynamicDepth"));
+		menuItemUseDynamicDepth.setSelected(controller.isUsingDynamicDepth());
+		
 		menuTopOptions.add(menuItemDontMakeMoves = new JCheckBoxMenuItem());
 		menuItemDontMakeMoves.setAction(new ActionToggleOption("Don't make moves", menuItemDontMakeMoves, "setDontMakeMoves"));
 		menuItemDontMakeMoves.setSelected(controller.isDontMakeMoves());
@@ -77,7 +89,10 @@ public class JRodrigoMainWindow extends JFrame {
 		menuTopOptions.add(menuItemAIPlaysWhite = new JCheckBoxMenuItem());
 		menuItemAIPlaysWhite.setAction(new ActionToggleOption("AI plays white", menuItemAIPlaysWhite, "setAiPlaysWhite"));
 		menuItemAIPlaysWhite.setSelected(controller.isAiPlaysWhite());
-
+		
+		menuTopOptions.add(makeAIStyleMenu(menuTopOptions, BoardCellColor.BLACK));
+		menuTopOptions.add(makeAIStyleMenu(menuTopOptions, BoardCellColor.WHITE));
+		
 		menuBar.add(menuTopGame);
 		menuBar.add(menuTopOptions);
 		
@@ -95,6 +110,23 @@ public class JRodrigoMainWindow extends JFrame {
 		
 		setVisible(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
+	
+	private JMenu makeAIStyleMenu(JMenu parent, BoardCellColor color) {
+		final Genome genomeObj[] = {Genome.DEFAULT, Genome.EVO1, Genome.EVO2, Genome.EVO6, Genome.EVO7, Genome.EVO8a, Genome.EVO8b, Genome.EVO8c, Genome.EVO8d};
+		final String genomeLabel[] = {"Default", "Evo-1", "Evo-2", "Evo-6", "Evo-7", "Evo-8a", "Evo-8b", "Evo-8c", "Evo-8d"};
+		
+		JMenu m = new JMenu(color.toString() + " AI style");
+		ButtonGroup g = new ButtonGroup();
+		JRadioButtonMenuItem mi;
+		for(int i = 0; i < genomeObj.length; i++) {
+			mi = new JRadioButtonMenuItem(new ActionChangeAIStyle(genomeLabel[i], color, genomeObj[i]));
+			g.add(mi);
+			m.add(mi);
+			if(i == 0) mi.setSelected(true);
+		}
+		
+		return m;
 	}
 	
 	public class ActionNewGame extends AbstractAction {
@@ -185,6 +217,28 @@ public class JRodrigoMainWindow extends JFrame {
 				controllerMethod.invoke(controller, menuItem.isSelected());
 			} catch(Exception e) {
 				e.printStackTrace();
+			}
+		}
+	}
+	
+	public class ActionChangeAIStyle extends AbstractAction {
+		private static final long serialVersionUID = -2044308533845029213L;
+		
+		private BoardCellColor targetPlayer;
+		private Genome genome;
+		
+		public ActionChangeAIStyle(String name, BoardCellColor targetPlayer, Genome genome) {
+			super(name, null);
+			this.targetPlayer = targetPlayer;
+			this.genome = genome;
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			AIPlayer p = controller.getAIPlayer(targetPlayer);
+			if(p instanceof AlphaBetaPlayer) {
+				AlphaBetaPlayer abp = (AlphaBetaPlayer) p;
+				abp.setGenome(genome);
 			}
 		}
 	}
