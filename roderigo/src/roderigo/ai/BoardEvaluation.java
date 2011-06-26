@@ -56,7 +56,7 @@ public class BoardEvaluation {
 		value[Genome.Bit.ownCcells.ordinal()] = ccells.piecesOfColor(color).size();
 		value[Genome.Bit.opponentCcells.ordinal()] = ccells.piecesOfColor(color.opposite()).size();
 		
-		BoardCellSet abcells = board.getCellsOfType(BoardCell.Type.B); abcells.addAll(board.getCellsOfType(BoardCell.Type.A));
+		BoardCellSet abcells = BoardCellSet.union(board.getCellsOfType(BoardCell.Type.A), board.getCellsOfType(BoardCell.Type.B));
 		value[Genome.Bit.ownABcells.ordinal()] = abcells.piecesOfColor(color).size();
 		value[Genome.Bit.opponentABcells.ordinal()] = abcells.piecesOfColor(color.opposite()).size();
 		
