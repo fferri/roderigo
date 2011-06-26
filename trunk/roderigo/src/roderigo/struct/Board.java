@@ -15,9 +15,16 @@ import java.util.Map;
 public class Board {
 	private BoardCell boardCell[][];
 	
-	// cells sets
-	private BoardCellSet allCells;
-	private Map<BoardCell.Type, BoardCellSet> cellsByType;
+	// static cells sets (created first time they are needed)
+	private BoardCellSet allCells = null;
+	private Map<BoardCell.Type, BoardCellSet> cellsByType = null;
+	
+	// cached [dynamic] cell sets
+	private BoardCellSet allPieces = null;
+	private BoardCellSet border = null;
+	private BoardCellSet fringe = null;
+	private BoardCellSet validMovesW = null;
+	private BoardCellSet validMovesB = null;
 	
 	static class BoardManager {
 		private Board board;
@@ -31,22 +38,22 @@ public class Board {
 		}
 	}
 	
+	private final BoardManager manager = new BoardManager(this);
+	
 	public Board(int rows, int cols) {
 		boardCell = new BoardCell[rows][cols];
 		
-		allCells = new BoardCellSet(rows * cols);
-		cellsByType = new HashMap<BoardCell.Type, BoardCellSet>();
-		for(BoardCell.Type t : BoardCell.Type.values()) cellsByType.put(t, new BoardCellSet());
-		
 		for(int row = 0; row < getNumRows(); row++) {
 			for(int col = 0; col < getNumColumns(); col++) {
-				boardCell[row][col] = new BoardCell(new BoardManager(this), row, col);
-				allCells.add(boardCell[row][col]);
-				cellsByType.get(boardCell[row][col].getType()).add(boardCell[row][col]);
+				boardCell[row][col] = new BoardCell(manager, row, col);
 			}
 		}
 		
-		reset();
+		//reset();
+		boardCell[3][3].setWhite();
+		boardCell[4][4].setWhite();
+		boardCell[3][4].setBlack();
+		boardCell[4][3].setBlack();
 	}
 	
 	/**
@@ -103,6 +110,20 @@ public class Board {
 	 * @return
 	 */
 	public BoardCellSet getAllCells() {
+		if(allCells == null) {
+			allCells = new BoardCellSet(manager, getNumRows() * getNumColumns());
+			
+			cellsByType = new HashMap<BoardCell.Type, BoardCellSet>();
+			for(BoardCell.Type t : BoardCell.Type.values()) cellsByType.put(t, new BoardCellSet(manager));
+			
+			for(int row = 0; row < getNumRows(); row++) {
+				for(int col = 0; col < getNumColumns(); col++) {
+					allCells.add(manager, boardCell[row][col]);
+					cellsByType.get(boardCell[row][col].getType()).add(manager, boardCell[row][col]);
+				}
+			}
+		}
+		
 		return allCells;
 	}
 	
@@ -113,6 +134,10 @@ public class Board {
 	 * @return The above mentioned set
 	 */
 	public BoardCellSet getCellsOfType(BoardCell.Type type) {
+		if(cellsByType == null) {
+			getAllCells();
+		}
+		
 		return cellsByType.get(type);
 	}
 	
@@ -122,13 +147,17 @@ public class Board {
 	 * @return The above mentioned set
 	 */
 	public BoardCellSet getAllPieces() {
-		BoardCellSet result = new BoardCellSet();
+		if(allPieces == null) {
+			BoardCellSet result = new BoardCellSet(manager);
+			
+			for(BoardCell cell : getAllCells())
+				if(!cell.isClear())
+					result.add(manager, cell);
+			
+			allPieces = result;
+		}
 		
-		for(BoardCell cell : allCells)
-			if(!cell.isClear())
-				result.add(cell);
-		
-		return result;
+		return allPieces;
 	}
 	
 	/**
@@ -145,6 +174,15 @@ public class Board {
 				boardCell[row][col].copyFrom(b.boardCell[row][col]);
 			}
 		}
+		
+		// maintain static and cached sets:
+		allCells = b.allCells;
+		cellsByType = b.cellsByType;
+		allPieces = b.allPieces;
+		border = b.border;
+		fringe = b.fringe;
+		validMovesW = b.validMovesW;
+		validMovesB = b.validMovesB;
 	}
 	
 	/**
@@ -162,7 +200,7 @@ public class Board {
 	 * Clear the board (all cells empty)
 	 */
 	public void clearAll() {
-		for(BoardCell cell : allCells) {
+		for(BoardCell cell : getAllCells()) {
 			cell.clear();
 		}
 	}
@@ -188,7 +226,7 @@ public class Board {
 	 * @return The above mentioned set
 	 */
 	public BoardCellSet between(BoardCell a, BoardCell b) {
-		BoardCellSet result = new BoardCellSet();
+		BoardCellSet result = new BoardCellSet(manager);
 		
 		int dr = (b.row - a.row);
 		int dc = (b.col - a.col);
@@ -209,7 +247,7 @@ public class Board {
 		int col = a.col + dc;
 		
 		while(true) {
-			result.add(boardCell[row][col]);
+			result.add(manager, boardCell[row][col]);
 			row += dr;
 			col += dc;
 			if(b.row == row && b.col == col) break;
@@ -266,21 +304,25 @@ public class Board {
 	 * @return The set of fringe cells
 	 */
 	public BoardCellSet getFringe() {
-		BoardCellSet result = new BoardCellSet();
+		if(fringe == null) {
+			BoardCellSet result = new BoardCellSet(manager);
+			
+			getFringe(get(4, 4), new BoardCellSet(manager), result);
+			
+			fringe = result;
+		}
 		
-		getFringe(get(4, 4), new BoardCellSet(), result);
-		
-		return result;
+		return fringe;
 	}
 	
 	private void getFringe(BoardCell cell, BoardCellSet visited, BoardCellSet result) {
-		visited.add(cell);
+		visited.add(manager, cell);
 		
 		BoardCellSet a = cell.adjacentCells();
 		
 		for(BoardCell a0 : a) {
 			if(a0.isClear()) {
-				result.add(a0);
+				result.add(manager, a0);
 			} else {
 				if(!visited.contains(a0)) {
 					getFringe(a0, visited, result);
@@ -296,21 +338,25 @@ public class Board {
 	 * @return The set of border cells
 	 */
 	public BoardCellSet getBorder() {
-		BoardCellSet result = new BoardCellSet();
+		if(border == null) {
+			BoardCellSet result = new BoardCellSet(manager);
+			
+			getBorder(get(4, 4), new BoardCellSet(manager), result);
+			
+			border = result;
+		}
 		
-		getBorder(get(4, 4), new BoardCellSet(), result);
-		
-		return result;
+		return border;
 	}
 	
 	private void getBorder(BoardCell cell, BoardCellSet visited, BoardCellSet result) {
 		if(cell.isClear()) return;
-		visited.add(cell);
+		visited.add(manager, cell);
 		
 		BoardCellSet a = cell.adjacentCells();
 		
 		if(a.containsAnEmptyCell()) {
-			result.add(cell);
+			result.add(manager, cell);
 		}
 		
 		for(BoardCell a0 : a) {
@@ -348,14 +394,32 @@ public class Board {
 	 * @return
 	 */
 	public BoardCellSet getValidMoves(BoardCellColor color) {
-		BoardCellSet r = new BoardCellSet();
+		if(color == BoardCellColor.WHITE && validMovesW == null) {
+			validMovesW = getValidMoves_noCache(color);
+		}
+		
+		if(color == BoardCellColor.BLACK && validMovesB == null) {
+			validMovesB = getValidMoves_noCache(color);
+		}
+		
+		if(color == BoardCellColor.WHITE)
+			return validMovesW;
+		
+		if(color == BoardCellColor.BLACK)
+			return validMovesB;
+		
+		return null;
+	}
+	
+	private BoardCellSet getValidMoves_noCache(BoardCellColor color) {
+		BoardCellSet result = new BoardCellSet(manager);
 		
 		BoardCellSet fringe = getFringe();
 		for(BoardCell cell : fringe)
 			if(isValidMove(cell, color))
-				r.add(cell);
+				result.add(manager, cell);
 		
-		return r;
+		return result;
 	}
 
 	/**
@@ -372,11 +436,11 @@ public class Board {
 		
 		if(!cell.isClear()) return false;
 		
-		BoardCellSet enclosingPieces = new BoardCellSet();
+		BoardCellSet enclosingPieces = new BoardCellSet(manager);
 		
 		for(Direction dir : Direction.allDirections) {
 			BoardCell e = findEnclosingPiece(cell, dir, color);
-			if(e != null) enclosingPieces.add(e);
+			if(e != null) enclosingPieces.add(manager, e);
 		}
 		
 		if(enclosingPieces.isEmpty()) return false;
@@ -423,5 +487,16 @@ public class Board {
 			pw.println("");
 		}
 		pw.flush();
+	}
+	
+	/**
+	 * Invalidate the cache
+	 */
+	void invalidateCache() {
+		allPieces = null;
+		border = null;
+		fringe = null;
+		validMovesW = null;
+		validMovesB = null;
 	}
 }

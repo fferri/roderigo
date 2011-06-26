@@ -14,6 +14,8 @@ package roderigo.struct;
  */
 public class BoardCell {
 	private final transient Board board;
+	private final transient Board.BoardManager manager;
+	
 	public final int row, col;
 	
 	private BoardCellColor color;
@@ -32,6 +34,8 @@ public class BoardCell {
 	 * @param c
 	 */
 	public BoardCell(Board.BoardManager m, int r, int c) {
+		assert m != null;
+		manager = m;
 		board = m.getBoard();
 		row = r;
 		col = c;
@@ -64,18 +68,26 @@ public class BoardCell {
 	
 	public void copyFrom(BoardCell c) {
 		color = c.color;
+		
+		board.invalidateCache();
 	}
 	
 	public void clear() {
 		color = null;
+		
+		board.invalidateCache();
 	}
 	
 	public void setWhite() {
 		color = BoardCellColor.WHITE;
+		
+		board.invalidateCache();
 	}
 	
 	public void setBlack() {
 		color = BoardCellColor.BLACK;
+		
+		board.invalidateCache();
 	}
 	
 	public boolean isClear() {
@@ -118,6 +130,8 @@ public class BoardCell {
 	
 	public void flipColor() {
 		color = color.opposite();
+		
+		board.invalidateCache();
 	}
 	
 	public BoardCell adjacentCell(Direction d) {
@@ -125,12 +139,12 @@ public class BoardCell {
 	}
 	
 	public BoardCellSet adjacentCells() {
-		BoardCellSet result = new BoardCellSet(8);
+		BoardCellSet result = new BoardCellSet(manager, 8);
 		
 		for(Direction d : Direction.allDirections) {
 			BoardCell cell = adjacentCell(d);
 			if(cell != null)
-				result.add(cell);
+				result.add(manager, cell);
 		}
 		
 		return result;
@@ -146,6 +160,8 @@ public class BoardCell {
 	
 	public void setColor(BoardCellColor c) {
 		color = c;
+		
+		board.invalidateCache();
 	}
 	
 	public BoardCellColor getColor() {
