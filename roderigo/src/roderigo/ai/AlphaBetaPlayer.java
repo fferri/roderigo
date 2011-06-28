@@ -16,7 +16,7 @@ import roderigo.struct.GameState;
  *
  */
 public class AlphaBetaPlayer implements AIPlayer {
-	public static final int DEFAULT_DEPTH = 5;
+	public static final int DEFAULT_DEPTH = 6;
 	
 	private int maxDepth = DEFAULT_DEPTH;
 	private int dynamicMaxDepth = DEFAULT_DEPTH;
@@ -189,14 +189,14 @@ public class AlphaBetaPlayer implements AIPlayer {
 		int totPieces = b.getAllPieces().size();
 		
 		if(occupied * 3 < inner.length * 2) {
-			dynamicMaxDepth = 3;
-		} else if(totPieces < 32) {
-			dynamicMaxDepth = 4;
-		} else if(totPieces >= 54) {
-			// play last moves at full depth
-			dynamicMaxDepth = 10;
-		} else {
 			dynamicMaxDepth = 5;
+		} else if(totPieces < 32) {
+			dynamicMaxDepth = 6;
+		} else if(totPieces >= 52) {
+			// play last moves at full depth
+			dynamicMaxDepth = 12;
+		} else {
+			dynamicMaxDepth = 7;
 		}
 		
 		//dynamicMaxDepth = Math.min(dynamicMaxDepth, maxDepth);
