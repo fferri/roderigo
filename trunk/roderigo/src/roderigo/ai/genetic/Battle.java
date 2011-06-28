@@ -1,4 +1,4 @@
-package roderigo.ai;
+package roderigo.ai.genetic;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,8 +10,9 @@ import java.util.Map;
 import java.util.Set;
 
 import roderigo.Controller;
-import roderigo.ai.genetic.GeneticOperator;
-import roderigo.ai.genetic.Genome;
+import roderigo.ai.AIPlayer;
+import roderigo.ai.AbortException;
+import roderigo.ai.AlphaBetaPlayer;
 import roderigo.struct.Board;
 import roderigo.struct.BoardCellColor;
 import roderigo.struct.GameState;
