@@ -23,34 +23,80 @@ import roderigo.struct.GameState;
  *
  */
 public class Controller {
+	/**
+	 * Indicates if AI plays BLACK
+	 */
 	private boolean aiPlaysWhite = true;
+	
+	/**
+	 * Indicates if AI plays WHITE
+	 */
 	private boolean aiPlaysBlack = false;
 	
+	/**
+	 * Indicates AI will only mark the move it would do,
+	 * but won't do it (human will make the move for AI) 
+	 */
 	private boolean dontMakeMoves = false;
 	
+	/**
+	 * Run AI computation in a separate thread (for GUI)
+	 * instead of running in current thread (for GA)
+	 */
 	private boolean runAiTaskInBackground = true;
 	
+	/**
+	 * Search depth (if static)
+	 */
 	private int searchDepth = 5;
 	
+	/**
+	 * The GameState object
+	 */
 	private final GameState gameState;
+	
+	/**
+	 * Black player
+	 */
 	private final AIPlayer blackPlayer;
+	
+	/**
+	 * White player
+	 */
 	private final AIPlayer whitePlayer;
 	
-	// time measurement
+	/**
+	 * Start time measurement
+	 */
 	private long startTime[] = new long[2];
+	
+	/**
+	 * Total time counters
+	 */
 	private long totalTime[] = new long[2];
 	
-	// Controller factory
+	/**
+	 * Factory for building a Controller object
+	 * @return A controller instance
+	 */
 	public static Controller newController() {
 		return newController(
 				new AlphaBetaPlayer(Genome.DEFAULT),
 				new AlphaBetaPlayer(Genome.DEFAULT));
 	}
 	
+	/**
+	 * Factory for building a Controller object
+	 * @return A controller instance
+	 */
 	public static Controller newController(AIPlayer blackPlayer, AIPlayer whitePlayer) {
 		return newController(new GameState(), blackPlayer, whitePlayer);
 	}
 	
+	/**
+	 * Factory for building a Controller object
+	 * @return A controller instance
+	 */
 	public static Controller newController(GameState startingState, AIPlayer blackPlayer, AIPlayer whitePlayer) {
 		GameState gameState = new GameState(startingState);
 		// blackPlayer.setGameState(gameState);
@@ -63,7 +109,26 @@ public class Controller {
 		this.blackPlayer = blackPlayer;
 		this.whitePlayer = whitePlayer;
 	}
+
+	/**
+	 * Reset game state (i.e. start a new game).
+	 */
+	public void newGame() {
+		resetMeasureTime();
+		
+		gameState.newGame();
+		
+		notifyGameListeners_newGame(gameState);
+	}
 	
+	/**
+	 * Start game.
+	 * 
+	 * This causes a new game to be created if the current game
+	 * has no valid moves for no player (i.e. it's finished).
+	 * 
+	 * Otherwise causes just a call to continueGame 
+	 */
 	public void startGame() {
 		if(gameState.getTurn() == null)
 			newGame();
@@ -71,6 +136,14 @@ public class Controller {
 		continueGame();
 	}
 	
+	/**
+	 * Continue game.
+	 * 
+	 * This causes the AI to "wake up" if it is its turn.
+	 * 
+	 * Also takes care of time measurement, and of doing
+	 * end game check.
+	 */
 	public void continueGame() {
 		startMeasuringTime(getTurn());
 		
@@ -80,6 +153,12 @@ public class Controller {
 			checkEndGame();
 	}
 	
+	/**
+	 * Make a move for the current player.
+	 * 
+	 * @param cell The move
+	 * @return wether the move has been done (i.e. was valid)
+	 */
 	public boolean move(BoardCell cell) {
 		BoardCellColor oldTurn = getTurn();
 		
@@ -97,18 +176,33 @@ public class Controller {
 		}
 	}
 	
+	/**
+	 * Switch turn (i.e. force a pass)
+	 */
 	public void switchTurn() {
 		gameState.switchTurn();
 	}
 	
+	/**
+	 * Getter for the Board object (of GameState)
+	 * @return the Board object
+	 */
 	public Board getBoard() {
 		return gameState.getBoard();
 	}
 	
+	/**
+	 * Getter for the BoardCellColor (turn) object (of GameState)
+	 * @return the turn
+	 */
 	public BoardCellColor getTurn() {
 		return gameState.getTurn();
 	}
 	
+	/**
+	 * Check if for current turn, AI has to play
+	 * @return true if AI has to play, false otherwise
+	 */
 	public boolean isAITurn() {
 		BoardCellColor turn = gameState.getTurn();
 		AIPlayer aiPlayer = getAIPlayer(turn);
@@ -123,15 +217,11 @@ public class Controller {
 		return false;
 	}
 	
-	public void newGame() {
-		resetMeasureTime();
-		
-		gameState.newGame();
-		
-		notifyGameListeners_newGame(gameState);
-	}
-	
-	public void runAITask() {
+	/**
+	 * Run the AI task, either in background or in foreground,
+	 * depending on {runAiTaskInBackground} setting.
+	 */
+	private void runAITask() {
 		if(runAiTaskInBackground) {
 			Thread thread = new Thread() { @Override public void run() { runAITask_forReal(); } };
 			thread.start();
@@ -140,14 +230,9 @@ public class Controller {
 		}
 	}
 	
-	public AIPlayer getAIPlayer(BoardCellColor turn) {
-		if(turn == BoardCellColor.WHITE)
-			return whitePlayer;
-		if(turn == BoardCellColor.BLACK)
-			return blackPlayer;
-		return null;
-	}
-	
+	/**
+	 * Real run of the AI task (in foreground).
+	 */
 	private void runAITask_forReal() {
 		while(isAITurn()) {
 			// Get the AI which has to play now
@@ -157,7 +242,6 @@ public class Controller {
 			
 			if(aiPlayer instanceof AlphaBetaPlayer)
 				((AlphaBetaPlayer) aiPlayer).setMaxDepth(searchDepth);
-			
 			
 			BoardCell bestMove = null;
 			notifyAiTaskListeners_computationStart(aiPlayer);
@@ -193,6 +277,23 @@ public class Controller {
 		checkEndGame();
 	}
 	
+	/**
+	 * Get the AIPlayer associated with the specified turn
+	 * @param turn
+	 * @return
+	 */
+	public AIPlayer getAIPlayer(BoardCellColor turn) {
+		if(turn == BoardCellColor.WHITE)
+			return whitePlayer;
+		if(turn == BoardCellColor.BLACK)
+			return blackPlayer;
+		return null;
+	}
+	
+	/**
+	 * Is the game in a finished state?
+	 * (i.e. no player has valid moves)
+	 */
 	public void checkEndGame() {
 		if(getTurn() != null) return;
 		
@@ -202,6 +303,10 @@ public class Controller {
 		notifyGameListeners_gameEnd(gameState);
 	}
 
+	/**
+	 * Create a nifty end game message
+	 * @return the message String
+	 */
 	public String getEndGameMessage() {
 		StringBuilder message = new StringBuilder();
 		
