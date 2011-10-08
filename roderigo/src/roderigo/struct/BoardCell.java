@@ -167,4 +167,12 @@ public class BoardCell {
 	public BoardCellColor getColor() {
 		return color;
 	}
+	
+	void setFromInt(int i) {
+		setColor(BoardCellColor.fromInt(i));
+	}
+	
+	int getInt() {
+		return BoardCellColor.toInt(getColor());
+	}
 }

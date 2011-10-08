@@ -43,4 +43,16 @@ public class BoardCellColor {
 		if(c == WHITE) return BLACK;
 		return c;
 	}
+	
+	public static BoardCellColor fromInt(int i) {
+		if(i == 1) return BLACK;
+		if(i == 2) return WHITE;
+		return null;
+	}
+	
+	public static int toInt(BoardCellColor c) {
+		if(c == BLACK) return 1;
+		if(c == WHITE) return 2;
+		return 0;
+	}
 }

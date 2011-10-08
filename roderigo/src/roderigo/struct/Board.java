@@ -40,7 +40,50 @@ public class Board {
 	
 	private final BoardManager manager = new BoardManager(this);
 	
+	/**
+	 * Construct a board in its initial state
+	 * @param rows
+	 * @param cols
+	 */
 	public Board(int rows, int cols) {
+		initCells(rows, cols);
+		setClassicInitialState();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if(obj == null) return false;
+		if(!(obj instanceof Board)) return false;
+		Board b = (Board)obj;
+		
+		if(getNumRows() != b.getNumRows() || getNumColumns() != b.getNumColumns())
+			return false;
+		
+		for(int row = 0; row < getNumRows(); row++) {
+			for(int col = 0; col < getNumColumns(); col++) {
+				if(get(row, col).getInt() != b.get(row, col).getInt())
+					return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Construct a board from the given int array
+	 * according to BoardCellColor.fromInt() conversion rule
+	 */
+	public Board(int data[][]) {
+		initCells(data.length, data[0].length);
+		
+		for(int row = 0; row < getNumRows(); row++) {
+			for(int col = 0; col < getNumColumns(); col++) {
+				boardCell[row][col].setFromInt(data[row][col]);
+			}
+		}
+	}
+	
+	private void initCells(int rows, int cols) {
 		boardCell = new BoardCell[rows][cols];
 		
 		for(int row = 0; row < getNumRows(); row++) {
@@ -48,12 +91,17 @@ public class Board {
 				boardCell[row][col] = new BoardCell(manager, row, col);
 			}
 		}
-		
-		//reset();
-		boardCell[3][3].setWhite();
-		boardCell[4][4].setWhite();
-		boardCell[3][4].setBlack();
-		boardCell[4][3].setBlack();
+	}
+	
+	private void setClassicInitialState() {
+		if(getNumRows() >= 2 && getNumColumns() >= 2) {
+			// classic initial board state:
+			int cr = getNumRows() / 2, cc = getNumColumns() / 2;
+			boardCell[cr - 1][cc - 1].setWhite();
+			boardCell[cr][cc].setWhite();
+			boardCell[cr - 1][cc].setBlack();
+			boardCell[cr][cc - 1].setBlack();
+		}
 	}
 	
 	/**
@@ -163,18 +211,31 @@ public class Board {
 	/**
 	 * Copy board content from b
 	 * 
-	 * @param b
+	 * @param b The source board
 	 */
 	public void copyFrom(Board b) {
+		copyFrom(b, 0);
+	}
+	
+	/**
+	 * Copy board content from b using the specified transform
+	 * 
+	 * @param b The source board
+	 * @param transform The transform to use to remap points
+	 */
+	public void copyFrom(Board b, int transform) {
 		if(b.getNumRows() != getNumRows() || b.getNumColumns() != getNumColumns())
 			throw new RuntimeException("Board size mismatch trying to do a copy");
 		
-		for(int row = 0; row < getNumRows(); row++) {
-			for(int col = 0; col < getNumColumns(); col++) {
-				boardCell[row][col].copyFrom(b.boardCell[row][col]);
+		int p[] = new int[2], q[] = new int[2];
+		
+		for(p[0] = 0; p[0] < getNumRows(); p[0]++) {
+			for(p[1] = 0; p[1] < getNumColumns(); p[1]++) {
+				transformPoint(p, q, transform);
+				boardCell[p[0]][p[1]].copyFrom(b.boardCell[q[0]][q[1]]);
 			}
 		}
-		
+
 		// maintain static and cached sets:
 		allCells = b.allCells;
 		cellsByType = b.cellsByType;
@@ -465,14 +526,15 @@ public class Board {
 	
 	public void print(PrintWriter pw, boolean wide) {
 		// header:
-		pw.print("   ");
-		String hdr[] = {"a", "b", "c", "d", "e", "f", "g", "h"};
-		for(String h : hdr) pw.print(h + (wide ? " " : ""));
+		pw.print("    ");
+		for(int col = 0; col < getNumColumns(); col++) {
+			pw.print(BoardCell.getColumnString(col) + (wide ? " " : ""));
+		}
 		pw.println("");
 		
 		// rows:
 		for(int row = 0; row < getNumRows(); row++) {
-			pw.print("" + (row+1) + ": ");
+			pw.print((row < 10 ? " " : "") + BoardCell.getRowString(row) + ": ");
 			for(int col = 0; col < getNumColumns(); col++) {
 				BoardCell cell = get(row, col);
 				if(cell.isClear())
@@ -498,5 +560,80 @@ public class Board {
 		fringe = null;
 		validMovesW = null;
 		validMovesB = null;
+	}
+	
+	/**
+	 * BOARD TRANSFORMATIONS (FLIP, ROTATE, ...)
+	 */
+	
+	public void transformPoint(int[] in, int[] out, int transformType) {
+		assert in.length == 2 && out.length == 2;
+		assert getNumRows() == getNumColumns();
+		int n = getNumRows();
+		final int R = 0, C = 1;
+		switch(transformType) {
+		case 0: // identity
+			out[R] = in[R];
+			out[C] = in[C];
+			break;
+		case 1: // rotate 90
+			out[R] = n - in[C] - 1;
+			out[C] = in[R];
+			break;
+		case 2: // rotate 180
+			out[R] = n - in[R] - 1;
+			out[C] = n - in[C] - 1;
+			break;
+		case 3: // rotate 270
+			out[R] = in[C];
+			out[C] = n - in[R] - 1;
+			break;
+		case 4: // flip-x
+			out[R] = in[R];
+			out[C] = n - in[C] - 1;
+			break;
+		case 5: // flip-x + rotate 90
+			out[R] = n - in[C] - 1;
+			out[C] = n - in[R] - 1;
+			break;
+		case 6: // flip-x + rotate 180
+			out[R] = n - in[R] - 1;
+			out[C] = in[C];
+			break;
+		case 7: // flip-x + rotate 270
+			out[R] = in[C];
+			out[C] = in[R];
+			break;
+		}
+	}
+	
+	public int compareTransform(int t1, int t2) {
+		int p[] = new int[2], q[] = new int[2], r[] = new int[2];
+		assert getNumRows() == getNumColumns();
+		int n = getNumRows(), c;
+		BoardCell c1, c2;
+		Integer i1, i2;
+		for(p[0] = 0; p[0] < n; p[0]++) {
+			for(p[1] = 0; p[1] < n; p[1]++) {
+				transformPoint(p, q, t1);
+				transformPoint(p, r, t2);
+				c1 = get(q[0], q[1]);
+				c2 = get(r[0], r[1]);
+				i1 = (c1.isBlack() ? 1 : 0) + (c1.isWhite() ? 2 : 0);
+				i2 = (c2.isBlack() ? 1 : 0) + (c2.isWhite() ? 2 : 0);
+				c = i1.compareTo(i2);
+				if(c != 0) return c;
+			}
+		}
+		return 0;
+	}
+	
+	public int getPreferredTransform() {
+		int preferredTransform = 0;
+		for(int t = 1; t < 8; t++) {
+			if(compareTransform(preferredTransform, t) < 0)
+				preferredTransform = t;
+		}
+		return preferredTransform;
 	}
 }
