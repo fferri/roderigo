@@ -149,6 +149,11 @@ public class JBoard extends JPanel implements MouseListener, MouseMotionListener
 			g.setColor(colors.lastMove);
 			g.fillRect(x + m.cell / 2 - 2, y + m.cell / 2 - 2, 4, 4);
 		}
+		
+		if(c.isStable()) {
+			g.setColor(colors.stablePiece);
+			g.fillRect(x + m.cell * 9 / 10, y + m.cell * 9 / 10, 5, 5);
+		}
 	}
 	
 	// CellListener observer

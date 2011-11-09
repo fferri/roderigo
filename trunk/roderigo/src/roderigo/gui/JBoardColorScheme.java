@@ -16,4 +16,6 @@ public class JBoardColorScheme {
 	public final Color lastMove = Color.blue;
 	
 	public final Color bestMove = Color.orange;
+	
+	public final Color stablePiece = Color.yellow;
 }
