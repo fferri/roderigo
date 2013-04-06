@@ -79,7 +79,7 @@ public class QTableNeuralNet<S extends AbstractBoard<P, A, C>, A extends Abstrac
 			out[i] = neuralNet.getOutput();
 			out[i][actionIndex(state, action)] = value;
 		}
-		neuralNet.epoch(in, out, 0.5, 0.3);
+		neuralNet.epoch(in, out, 0.85, 0.3);
 	}
 
 	@Override
