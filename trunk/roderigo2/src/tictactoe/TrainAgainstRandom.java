@@ -43,7 +43,8 @@ public class TrainAgainstRandom {
 		final int batchSize = 200;
 		double p;
 		System.out.println("X = [");
-		for(int b = 0; b < numIter; b += batchSize) {
+		int numok = 0;
+		for(int b = 0; true; b += batchSize) {
 			p = 1 - Math.exp(-10*(numIter - b)/(double)numIter);
 			opponent.setProbability(p);
 			qlearning.train(batchSize, 0.8, true);
@@ -53,6 +54,8 @@ public class TrainAgainstRandom {
 			int e1[] = Evaluator.evaluate(game, p1a, p2, 100);
 			int e2[] = Evaluator.evaluate(game, p1b, p2, 1);
 			System.out.println(String.format("%d, %f,  %d, %d, %d,  %d, %d, %d", b, p, e1[0], e1[1], e1[2], e2[0], e2[1], e2[2]));
+			if(e1[0] < 5) numok++; else numok = 0;
+			if(numok > 10) break;
 		}
 		System.out.println("]; plot(X(:,2))");
 
