@@ -19,7 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
 
-import neuralnet.NeuralNetwork;
+import neuralnetwork.NeuralNetwork;
 
 public class TrainTest {
 	static NeuralNetwork neuralNetwork;
@@ -124,7 +124,7 @@ public class TrainTest {
 	
 	static double predict(double x, double y) {
 		neuralNetwork.setInput(new double[]{x, y});
-		neuralNetwork.activate();
+		neuralNetwork.feedForward();
 		return neuralNetwork.getOutput()[0];
 	}
 	
