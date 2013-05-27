@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import neuralnet.NeuralNetwork;
+import neuralnetwork.NeuralNetwork;
 
 public class QTableNeuralNet<S extends AbstractBoard<P, A, C>, A extends AbstractAction<P>, C extends AbstractColor, P extends AbstractPosition> extends AbstractQTable<S, A, C, P> {
 	private final QTable<S, A, C, P> memory = new QTable<>();
@@ -74,7 +74,7 @@ public class QTableNeuralNet<S extends AbstractBoard<P, A, C>, A extends Abstrac
 	@Override
 	public double get(S state, A action) {
 		neuralNet.setInput(stateToInputVector(state));
-		neuralNet.activate();
+		neuralNet.feedForward();
 		return neuralNet.getOutput()[actionIndex(state, action)];
 	}
 
@@ -88,7 +88,7 @@ public class QTableNeuralNet<S extends AbstractBoard<P, A, C>, A extends Abstrac
 		for(int i = 0; i < memory.size(); i++) {
 			in[i] = stateToInputVector(state);
 			neuralNet.setInput(in[i]);
-			neuralNet.activate();
+			neuralNet.feedForward();
 			out[i] = neuralNet.getOutput();
 			out[i][actionIndex(state, action)] = value;
 		}
