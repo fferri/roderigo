@@ -19,18 +19,31 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import neuralnet.NeuralNetwork;
 
 public class QTableNeuralNet<S extends AbstractBoard<P, A, C>, A extends AbstractAction<P>, C extends AbstractColor, P extends AbstractPosition> extends AbstractQTable<S, A, C, P> {
-	private static final int MEMORY = 200;
 	private final QTable<S, A, C, P> memory = new QTable<>();
 	
 	private NeuralNetwork neuralNet;
+	private double learningRate = 1;
+	private double momentum = 0.1;
+	private int memorySize = 200;
 	
 	public QTableNeuralNet(int stateSize, int hiddenSize) {
 		neuralNet = new NeuralNetwork(stateSize, hiddenSize, stateSize);
+	}
+	
+	public void setLearningRate(double lr) {
+		learningRate = lr;
+	}
+	
+	public void setMomentum(double m) {
+		momentum = m;
+	}
+	
+	public void setMemorySize(int sz) {
+		memorySize = sz;
 	}
 
 	private double[] stateToInputVector(S state) {
@@ -68,7 +81,7 @@ public class QTableNeuralNet<S extends AbstractBoard<P, A, C>, A extends Abstrac
 	@Override
 	public void set(S state, A action, double value) {
 		memory.set(state, action, value);
-		while(memory.size() > MEMORY) memory.removeFirst();
+		while(memory.size() > memorySize) memory.removeFirst();
 		
 		double in[][] = new double[memory.size()][neuralNet.getNumInputs()];
 		double out[][] = new double[memory.size()][neuralNet.getNumOutputs()];
@@ -79,7 +92,7 @@ public class QTableNeuralNet<S extends AbstractBoard<P, A, C>, A extends Abstrac
 			out[i] = neuralNet.getOutput();
 			out[i][actionIndex(state, action)] = value;
 		}
-		neuralNet.epoch(in, out, 0.85, 0.3);
+		neuralNet.epoch(in, out, learningRate, momentum);
 	}
 
 	@Override
