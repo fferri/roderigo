@@ -10,9 +10,10 @@ import game.GameController.GameListener;
 import game.player.AbstractPlayer;
 
 public class Evaluator {
-	public static <S extends AbstractBoard<P, A, C>, A extends AbstractAction<P>, C extends AbstractColor, P extends AbstractPosition> int[] evaluate(Game<S, A, C, P> game, final AbstractPlayer<S, A, C, P> p1, final AbstractPlayer<S, A, C, P> p2, int numMatches) {
-		final int ret[] = {0, 0, 0};
-		while(numMatches-- > 0) {
+	public static <S extends AbstractBoard<P, A, C>, A extends AbstractAction<P>, C extends AbstractColor, P extends AbstractPosition> double[] evaluate(Game<S, A, C, P> game, final AbstractPlayer<S, A, C, P> p1, final AbstractPlayer<S, A, C, P> p2, int numMatches) {
+		final double ret[] = {0, 0, 0};
+		if(numMatches <= 0) return ret;
+		for(int i = 0; i < numMatches; i++) {
 			GameController<S, A, C, P> controller = new GameController<>(game);
 			controller.addPlayer(p1);
 			controller.addPlayer(p2);
@@ -28,6 +29,8 @@ public class Evaluator {
 			});
 			controller.play(game.getInitialState());
 		}
+		for(int i = 0; i < ret.length; i++)
+			ret[i] /= (double)numMatches;
 		return ret;
 	}
 }
