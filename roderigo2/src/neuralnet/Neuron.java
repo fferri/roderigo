@@ -46,12 +46,9 @@ public class Neuron implements Serializable {
 		return 1.0 / (1.0 + (Math.exp(-x)));
 	}
 
-	public void addInConnectionsS(ArrayList<Neuron> inNeurons) {
-		for(Neuron n : inNeurons) {
-			Connection con = new Connection(n, this);
-			Inconnections.add(con);
-			connectionLookup.put(n.id, con);
-		}
+	public void addInConnectionsS(Layer inLayer) {
+		for(Neuron n : inLayer.getNeurons())
+			addInConnection(new Connection(n, this));
 	}
 
 	public Connection getConnection(int neuronIndex) {
@@ -60,6 +57,7 @@ public class Neuron implements Serializable {
 
 	public void addInConnection(Connection con) {
 		Inconnections.add(con);
+		connectionLookup.put(con.getFromNeuron().id, con);
 	}
 
 	public void addBiasConnection(Neuron n) {

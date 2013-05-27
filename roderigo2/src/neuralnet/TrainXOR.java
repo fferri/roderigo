@@ -8,7 +8,7 @@ public class TrainXOR {
 	static final double expectedOutputs[][] = {{0}, {1}, {1}, {0}};
 	
 	public static void main(String[] args) {
-		NeuralNetwork nn = new NeuralNetwork(2, 4, 1);
+		NeuralNetwork nn = new NeuralNetwork(2, 2, 2, 1);
 		nn.train(inputs, expectedOutputs, 50000, 0.00001);
 		
 		for(int i = 0; i < inputs.length; i++) {
