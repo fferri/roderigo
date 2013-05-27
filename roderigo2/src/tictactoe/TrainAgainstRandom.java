@@ -15,19 +15,37 @@ import game.player.AbstractPlayer;
 import game.player.ProbabilisticPlayer;
 import game.player.RandomPlayer;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
+import Jama.Matrix;
 
 import tictactoe.TicTacToeBoard.Color;
 
 public class TrainAgainstRandom {
-	public static <S extends AbstractBoard<P, A, C>, A extends AbstractAction<P>, C extends AbstractColor, P extends AbstractPosition> void train(Game<S, A, C, P> game, C[] colors, int numIter) throws IOException {
+	static double maxIterations = 1000000000;
+	static double learningRate = 0.6;
+	static int memorySize = 10000;
+	static double momentum = 0.2;
+	static double pRand = 0.999;
+	static double gamma = 0.8;
+	static int numHiddenNeurons = 30;
+	
+	public static <S extends AbstractBoard<P, A, C>, A extends AbstractAction<P>, C extends AbstractColor, P extends AbstractPosition> void train(Game<S, A, C, P> game, C[] colors) throws IOException {
 		final File qtableFile = new File("tictactoe.dat");
 		final AbstractPlayer<S, A, C, P> me = new RandomPlayer<S, A, C, P>(colors[0], "rand");
-		final AbstractPlayer<S, A, C, P> opponent1 = new RandomPlayer<S, A, C, P>(colors[1], "opp-rand");
-		final AbstractPlayer<S, A, C, P> opponent2 = new AIMinMaxPlayer<S, A, C, P>(colors[1], "opp-ai", 9);
-		final ProbabilisticPlayer<S, A, C, P> opponent = new ProbabilisticPlayer<S, A, C, P>("opp", opponent1, opponent2, 0.5);
-		final AbstractQTable<S, A, C, P> qtable = new QTableNeuralNet<>(9, 6);
+		final AbstractPlayer<S, A, C, P> opponentRand = new RandomPlayer<S, A, C, P>(colors[1], "opp-rand");
+		final AbstractPlayer<S, A, C, P> opponentMinMax = new AIMinMaxPlayer<S, A, C, P>(colors[1], "opp-ai", 9);
+		final ProbabilisticPlayer<S, A, C, P> opponent = new ProbabilisticPlayer<S, A, C, P>("opp", opponentRand, opponentMinMax, pRand);
+		final QTableNeuralNet<S, A, C, P> qtable = new QTableNeuralNet<>(9, numHiddenNeurons);
+		qtable.setLearningRate(learningRate);
+		qtable.setMomentum(momentum);
+		qtable.setMemorySize(memorySize);
 		final QLearning<S, A, C, P> qlearning = new QLearning<S, A, C, P>(game, me.getColor(), qtable);
 		qlearning.setMyPlayer(me);
 		qlearning.setOpponentPlayer(opponent);
@@ -41,29 +59,58 @@ public class TrainAgainstRandom {
 			}
 		});*/
 		final int batchSize = 200;
-		double p;
-		System.out.println("X = [");
+		List<List<Double>> plot = new LinkedList<>();
 		int numok = 0;
-		for(int b = 0; true; b += batchSize) {
-			p = 1 - Math.exp(-10*(numIter - b)/(double)numIter);
-			opponent.setProbability(p);
-			qlearning.train(batchSize, 0.8, true);
+		for(int b = 0; b < maxIterations; b += batchSize) {
+			qlearning.train(batchSize, gamma, true);
 			AbstractPlayer<S, A, C, P> p1a = new RandomPlayer<S, A, C, P>(colors[1], "opp-rand");
 			AbstractPlayer<S, A, C, P> p1b = new AIMinMaxPlayer<S, A, C, P>(colors[1], "opp-rand", 9);
 			AbstractPlayer<S, A, C, P> p2 = new AIQPolicyPlayer<S, A, C, P>("opp-Q", qlearning);
-			int e1[] = Evaluator.evaluate(game, p1a, p2, 100);
-			int e2[] = Evaluator.evaluate(game, p1b, p2, 1);
-			System.out.println(String.format("%d, %f,  %d, %d, %d,  %d, %d, %d", b, p, e1[0], e1[1], e1[2], e2[0], e2[1], e2[2]));
-			if(e1[0] < 5) numok++; else numok = 0;
+			final int z1 = 100;
+			double e1[] = Evaluator.evaluate(game, p1a, p2, z1);
+			final int z2 = 1;
+			double e2[] = Evaluator.evaluate(game, p1b, p2, z2);
+			List<Double> plotLine = new ArrayList<>(10);
+			plotLine.add(new Double(b));
+			for(int i = 0; i < e1.length; i++) plotLine.add(e1[i]);
+			for(int i = 0; i < e2.length; i++) plotLine.add(e2[i]);
+			plot.add(plotLine);
+			writeMatlabDataMatrix(plot, "X", 1, "trainingPlot.m");
+			System.out.println("batch num " + b + ", e1[0] = " + e1[0]);
+			if(e1[0] < 0.05) numok++; else numok = 0;
 			if(numok > 10) break;
 		}
-		System.out.println("]; plot(X(:,2))");
 
 		qlearning.save(qtableFile);
 	}
 	
+	static void writeMatlabDataMatrix(List<List<Double>> data, String name, int column, String fileName) throws IOException {
+		BufferedWriter bw = new BufferedWriter(new FileWriter(new File(fileName)));
+		bw.append("% PERFORMANCE RESULTS\n");
+		bw.append("% learningRate = " + learningRate + "\n");
+		bw.append("% memorySize = " + memorySize + "\n");
+		bw.append("% momentum = " + momentum + "\n");
+		bw.append("% pRand = " + pRand + "\n");
+		bw.append("% gamma = " + gamma + "\n");
+		bw.append("% numHiddenNeurons = " + numHiddenNeurons + "\n");
+
+		bw.append(name);
+		bw.append(" = [\n");
+		for(List<Double> line : data) {
+			boolean first = true;
+			for(Double x : line) {
+				if(first) first = false;
+				else bw.append(", ");
+				bw.append(x.toString());
+			}
+			bw.append("\n");
+		}
+		bw.append("];\n\n");
+		bw.append("plot(" + name + "(:," + (column + 1) + "));\n");
+		bw.close();
+	}
+	
 	public static void main(String[] args) throws IOException {
-		final int numIter = 50000;
 		TicTacToeGame game = new TicTacToeGame() {
 			@Override
 			public TicTacToeBoard getInitialState() {
@@ -73,6 +120,6 @@ public class TrainAgainstRandom {
 				return b;
 			}
 		};
-		train(game, new Color[]{TicTacToeBoard.CIRCLE, TicTacToeBoard.CROSS}, numIter);
+		train(game, new Color[]{TicTacToeBoard.CIRCLE, TicTacToeBoard.CROSS});
 	}
 }
