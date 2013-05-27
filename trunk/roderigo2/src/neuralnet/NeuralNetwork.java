@@ -10,36 +10,19 @@ public class NeuralNetwork implements Serializable {
 	private static final long serialVersionUID = 7526472295622776147L;
 	
 	transient Random rand = new Random();
-	
-	ArrayList<Neuron> inputLayer = new ArrayList<Neuron>();
-	ArrayList<Neuron> hiddenLayer = new ArrayList<Neuron>();
-	ArrayList<Neuron> outputLayer = new ArrayList<Neuron>();
-	Neuron bias = new Neuron();
 
+	List<Layer> layers;
+	
 	private static final double epsilon = 0.00000000001;
 
-	public NeuralNetwork(int input, int hidden, int output) {
-
-		// input layer
-		for(int j = 0; j < input; j++) {
-			Neuron neuron = new Neuron();
-			inputLayer.add(neuron);
-		}
-
-		// hidden layer
-		for(int j = 0; j < hidden; j++) {
-			Neuron neuron = new Neuron();
-			neuron.addInConnectionsS(inputLayer);
-			neuron.addBiasConnection(bias);
-			hiddenLayer.add(neuron);
-		}
+	public NeuralNetwork(int...numUnits) {
+		layers = new ArrayList<>(numUnits.length);
 		
-		// output layer
-		for(int j = 0; j < output; j++) {
-			Neuron neuron = new Neuron();
-			neuron.addInConnectionsS(hiddenLayer);
-			neuron.addBiasConnection(bias);
-			outputLayer.add(neuron);
+		Layer prevLayer = null;
+		for(int i = 0; i < numUnits.length; i++) {
+			Layer layer = new Layer(numUnits[i], prevLayer);
+			layers.add(layer);
+			prevLayer = layer;
 		}
 
 		initializeRandomWeights(0.9);
@@ -49,32 +32,25 @@ public class NeuralNetwork implements Serializable {
 		Connection.counter = 0;
 	}
 	
-	public int getNumInputs() {
-		return inputLayer.size();
+	public Layer getInputLayer() {
+		return layers.get(0);
 	}
 	
-	public int getNumHidden() {
-		return hiddenLayer.size();
+	public Layer getOutputLayer() {
+		return layers.get(layers.size() - 1);
+	}
+	
+	public int getNumInputs() {
+		return getInputLayer().size();
 	}
 	
 	public int getNumOutputs() {
-		return outputLayer.size();
+		return getOutputLayer().size();
 	}
-
+	
 	public void initializeRandomWeights(double mult) {
-		for(Neuron neuron : hiddenLayer) {
-			ArrayList<Connection> connections = neuron.getAllInConnections();
-			for(Connection conn : connections) {
-				double newWeight = mult * (rand.nextDouble() * 2 - 1);
-				conn.setWeight(newWeight);
-			}
-		}
-		for(Neuron neuron : outputLayer) {
-			ArrayList<Connection> connections = neuron.getAllInConnections();
-			for(Connection conn : connections) {
-				double newWeight = mult * (rand.nextDouble() * 2 - 1);
-				conn.setWeight(newWeight);
-			}
+		for(int layer = 1; layer < layers.size(); layer++) {
+			layers.get(layer).initializeRandomWeights(mult);
 		}
 	}
 
@@ -85,16 +61,11 @@ public class NeuralNetwork implements Serializable {
 	 *            in input variables
 	 */
 	public void setInput(double inputs[]) {
-		for(int i = 0; i < inputLayer.size(); i++) {
-			inputLayer.get(i).setOutput(inputs[i]);
-		}
+		getInputLayer().setInput(inputs);
 	}
 
 	public double[] getOutput() {
-		double[] outputs = new double[outputLayer.size()];
-		for(int i = 0; i < outputLayer.size(); i++)
-			outputs[i] = outputLayer.get(i).getOutput();
-		return outputs;
+		return getOutputLayer().getOutput();
 	}
 
 	/**
@@ -102,14 +73,14 @@ public class NeuralNetwork implements Serializable {
 	 * operation
 	 */
 	public void activate() {
-		for(Neuron n : hiddenLayer)
-			n.calculateOutput();
-		for(Neuron n : outputLayer)
-			n.calculateOutput();
+		for(int layer = 1; layer < layers.size(); layer++) {
+			layers.get(layer).activate();
+		}
 	}
 
 	/**
 	 * all output propagate back
+	 * call this after NN activation (aka forward pass)
 	 * 
 	 * @param expectedOutput
 	 *            first calculate the partial derivative of the error with
@@ -130,7 +101,7 @@ public class NeuralNetwork implements Serializable {
 		}
 
 		int i = 0;
-		for(Neuron n : outputLayer) {
+		for(Neuron n : getOutputLayer().getNeurons()) {
 			ArrayList<Connection> connections = n.getAllInConnections();
 			for(Connection con : connections) {
 				double ak = n.getOutput();
@@ -146,27 +117,33 @@ public class NeuralNetwork implements Serializable {
 			i++;
 		}
 
-		// update weights for the hidden layer
-		for(Neuron n : hiddenLayer) {
-			ArrayList<Connection> connections = n.getAllInConnections();
-			for(Connection con : connections) {
-				double aj = n.getOutput();
-				double ai = con.leftNeuron.getOutput();
-				double sumKoutputs = 0;
-				int j = 0;
-				for(Neuron out_neu : outputLayer) {
-					double wjk = out_neu.getConnection(n.id).getWeight();
-					double desiredOutput = (double)expectedOutput[j];
-					double ak = out_neu.getOutput();
-					j++;
-					sumKoutputs = sumKoutputs + (-(desiredOutput - ak) * ak * (1 - ak) * wjk);
-				}
+		for(int layer = layers.size() - 1; layer > 0; layer--) {
+			Layer rightLayer = layers.get(layer);
+			Layer leftLayer = layers.get(layer - 1);
+			
+			// leftLayer is the hidden layer in the classic 3 layers network
+			for(Neuron n : leftLayer.getNeurons()) {
+				ArrayList<Connection> connections = n.getAllInConnections();
+				for(Connection con : connections) {
+					double aj = n.getOutput();
+					double ai = con.leftNeuron.getOutput();
+					double sumKoutputs = 0;
+					int j = 0;
+					// rightLayer is the output layer in the classic 3 layers network
+					for(Neuron out_neu : rightLayer.getNeurons()) {
+						double wjk = out_neu.getConnection(n.id).getWeight();
+						double desiredOutput = (double)expectedOutput[j];
+						double ak = out_neu.getOutput();
+						j++;
+						sumKoutputs = sumKoutputs + (-(desiredOutput - ak) * ak * (1 - ak) * wjk);
+					}
 
-				double partialDerivative = aj * (1 - aj) * ai * sumKoutputs;
-				double deltaWeight = -learningRate * partialDerivative;
-				double newWeight = con.getWeight() + deltaWeight;
-				con.setDeltaWeight(deltaWeight);
-				con.setWeight(newWeight + momentum * con.getPrevDeltaWeight());
+					double partialDerivative = aj * (1 - aj) * ai * sumKoutputs;
+					double deltaWeight = -learningRate * partialDerivative;
+					double newWeight = con.getWeight() + deltaWeight;
+					con.setDeltaWeight(deltaWeight);
+					con.setWeight(newWeight + momentum * con.getPrevDeltaWeight());
+				}
 			}
 		}
 	}
