@@ -3,6 +3,14 @@ package game.ai.rl;
 import game.AbstractAction;
 import game.AbstractBoard;
 
+/**
+ * The key of a Q-Table
+ * 
+ * @author Federico Ferri
+ *
+ * @param <S> class representing a board (the state)
+ * @param <A> class representing an action
+ */
 public class QTableKey<S extends AbstractBoard<?, A, ?>, A extends AbstractAction<?>> {
 	private S state;
 	private A action;

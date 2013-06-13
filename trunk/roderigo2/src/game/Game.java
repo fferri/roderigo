@@ -2,6 +2,16 @@ package game;
 
 import java.util.List;
 
+/**
+ * Interface for describing a board game
+ * 
+ * @author Federico Ferri
+ *
+ * @param <S> class representing a board (the state)
+ * @param <A> class representing an action
+ * @param <C> class representing a color
+ * @param <P> class representing a position
+ */
 public interface Game<S extends AbstractBoard<P, A, C>, A extends AbstractAction<P>, C extends AbstractColor, P extends AbstractPosition> {
 	/**
 	 * Return the initial state of the game.

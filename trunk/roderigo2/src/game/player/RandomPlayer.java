@@ -8,7 +8,16 @@ import game.Game;
 
 import java.util.List;
 
-
+/**
+ * A random player selects a random move among those available.
+ * 
+ * @author Federico Ferri
+ *
+ * @param <S> class representing a board (the state)
+ * @param <A> class representing an action
+ * @param <C> class representing a color
+ * @param <P> class representing a position
+ */
 public class RandomPlayer<S extends AbstractBoard<P, A, C>, A extends AbstractAction<P>, C extends AbstractColor, P extends AbstractPosition> extends AbstractPlayer<S, A, C, P> {
 	public RandomPlayer(C player, String name) {
 		super(name, player);

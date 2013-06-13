@@ -6,6 +6,17 @@ import game.AbstractColor;
 import game.AbstractPosition;
 import game.Game;
 
+/**
+ * A probabilistic player is a wrapper for two players.
+ * It chooses player 1 with probability p, and player 2 with probability 1-p
+ * 
+ * @author Federico Ferri
+ *
+ * @param <S> class representing a board (the state)
+ * @param <A> class representing an action
+ * @param <C> class representing a color
+ * @param <P> class representing a position
+ */
 public class ProbabilisticPlayer<S extends AbstractBoard<P, A, C>, A extends AbstractAction<P>, C extends AbstractColor, P extends AbstractPosition> extends AbstractPlayer<S, A, C, P> {
 	private final AbstractPlayer<S, A, C, P> player1;
 	private final AbstractPlayer<S, A, C, P> player2;

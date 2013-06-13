@@ -9,6 +9,12 @@ import game.AbstractBoard;
 import game.AbstractColor;
 import game.AbstractPosition;
 
+/**
+ * A tic-tac-toe board
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class TicTacToeBoard extends AbstractBoard<TicTacToeBoard.Position, TicTacToeBoard.Action, TicTacToeBoard.Color> {
 	public static final Color CROSS = new Color(-1);
 	public static final Color CIRCLE = new Color(1);

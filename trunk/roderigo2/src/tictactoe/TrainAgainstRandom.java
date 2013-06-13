@@ -8,6 +8,7 @@ import game.Game;
 import game.ai.Evaluator;
 import game.ai.rl.AbstractQTable;
 import game.ai.rl.QLearning;
+import game.ai.rl.QTable;
 import game.ai.rl.QTableNeuralNet;
 import game.player.AIMinMaxPlayer;
 import game.player.AIQPolicyPlayer;
@@ -27,6 +28,12 @@ import Jama.Matrix;
 
 import tictactoe.TicTacToeBoard.Color;
 
+/**
+ * Program for training the agent
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class TrainAgainstRandom {
 	static double maxIterations = 1000000000;
 	static double learningRate = 0.6;
@@ -37,15 +44,21 @@ public class TrainAgainstRandom {
 	static int numHiddenNeurons = 30;
 	
 	public static <S extends AbstractBoard<P, A, C>, A extends AbstractAction<P>, C extends AbstractColor, P extends AbstractPosition> void train(Game<S, A, C, P> game, C[] colors) throws IOException {
+		final boolean useNeuralQTable = false;
+		
 		final File qtableFile = new File("tictactoe.dat");
+		
 		final AbstractPlayer<S, A, C, P> me = new RandomPlayer<S, A, C, P>(colors[0], "rand");
 		final AbstractPlayer<S, A, C, P> opponentRand = new RandomPlayer<S, A, C, P>(colors[1], "opp-rand");
 		final AbstractPlayer<S, A, C, P> opponentMinMax = new AIMinMaxPlayer<S, A, C, P>(colors[1], "opp-ai", 9);
 		final ProbabilisticPlayer<S, A, C, P> opponent = new ProbabilisticPlayer<S, A, C, P>("opp", opponentRand, opponentMinMax, pRand);
-		final QTableNeuralNet<S, A, C, P> qtable = new QTableNeuralNet<>(9, numHiddenNeurons);
-		qtable.setLearningRate(learningRate);
-		qtable.setMomentum(momentum);
-		qtable.setMemorySize(memorySize);
+		
+		final QTableNeuralNet<S, A, C, P> qtableNN = new QTableNeuralNet<>(9, numHiddenNeurons);
+		qtableNN.setLearningRate(learningRate);
+		qtableNN.setMomentum(momentum);
+		qtableNN.setMemorySize(memorySize);
+		final AbstractQTable<S, A, C, P> qtable = useNeuralQTable ? qtableNN : new QTable<S, A, C, P>();
+		
 		final QLearning<S, A, C, P> qlearning = new QLearning<S, A, C, P>(game, me.getColor(), qtable);
 		qlearning.setMyPlayer(me);
 		qlearning.setOpponentPlayer(opponent);

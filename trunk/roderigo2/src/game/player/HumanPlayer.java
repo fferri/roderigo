@@ -8,7 +8,17 @@ import game.Game;
 
 import java.util.concurrent.SynchronousQueue;
 
-
+/**
+ * A human player.
+ * The moves are read from the actual human via a synchronous queue.
+ * 
+ * @author Federico Ferri
+ *
+ * @param <S> class representing a board (the state)
+ * @param <A> class representing an action
+ * @param <C> class representing a color
+ * @param <P> class representing a position
+ */
 public class HumanPlayer<S extends AbstractBoard<P, A, C>, A extends AbstractAction<P>, C extends AbstractColor, P extends AbstractPosition> extends AbstractPlayer<S, A, C, P> {
 	private SynchronousQueue<A> queue;
 	

@@ -7,7 +7,6 @@ import game.AbstractBoard;
 import game.AbstractColor;
 import game.AbstractPosition;
 
-
 /**
  * Model of an othello board.
  * 

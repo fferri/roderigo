@@ -22,6 +22,16 @@ import java.util.List;
 
 import neuralnetwork.NeuralNetwork;
 
+/**
+ * A Q-Table approximation using a neural network.
+ * 
+ * @author Federico Ferri
+ *
+ * @param <S> class representing a board (the state)
+ * @param <A> class representing an action
+ * @param <C> class representing a color
+ * @param <P> class representing a position
+ */
 public class QTableNeuralNet<S extends AbstractBoard<P, A, C>, A extends AbstractAction<P>, C extends AbstractColor, P extends AbstractPosition> extends AbstractQTable<S, A, C, P> {
 	private final QTable<S, A, C, P> memory = new QTable<>();
 	

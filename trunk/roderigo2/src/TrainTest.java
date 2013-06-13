@@ -21,6 +21,15 @@ import javax.swing.JSpinner;
 
 import neuralnetwork.NeuralNetwork;
 
+/**
+ * Demo GUI application to test online neural network regression
+ * Left-Click to add points.
+ * Right-Click to remove points.
+ * Left-Drag to move points around.
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class TrainTest {
 	static NeuralNetwork neuralNetwork;
 	static final int imageSz = 400;

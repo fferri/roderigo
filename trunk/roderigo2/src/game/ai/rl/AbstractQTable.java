@@ -11,6 +11,16 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * Abstract Q-Table
+ * 
+ * @author Federico Ferri
+ *
+ * @param <S> class representing a board (the state)
+ * @param <A> class representing an action
+ * @param <C> class representing a color
+ * @param <P> class representing a position
+ */
 public abstract class AbstractQTable<S extends AbstractBoard<P, A, C>, A extends AbstractAction<P>, C extends AbstractColor, P extends AbstractPosition> {
 	public abstract double get(S state, A action);
 	

@@ -15,6 +15,9 @@ import java.util.Observable;
  * 
  * @author Federico Ferri
  *
+ * @param <P> class representing the position
+ * @param <A> class representing the action
+ * @param <C> class representing the player color
  */
 public abstract class AbstractBoard<P extends AbstractPosition, A extends AbstractAction<P>, C extends AbstractColor> extends Observable {
 	protected final int rows;

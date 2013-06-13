@@ -20,7 +20,6 @@ import javax.swing.JPanel;
 import othello.OthelloBoard;
 import othello.OthelloBoard.Position;
 
-
 public class BoardWidget extends JPanel implements Observer {
 	private static final long serialVersionUID = 1L;
 
