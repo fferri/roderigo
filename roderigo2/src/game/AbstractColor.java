@@ -1,5 +1,11 @@
 package game;
 
+/**
+ * Abstract generic class representing the player color
+ * 
+ * @author Federico Ferri
+ *
+ */
 public abstract class AbstractColor {
 	protected final int value;
 	

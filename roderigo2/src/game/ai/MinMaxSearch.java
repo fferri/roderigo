@@ -8,7 +8,6 @@ import game.AbstractColor;
 import game.AbstractPosition;
 import game.Game;
 
-
 /**
  * MinMaxSearch algorithm for adversarial search.
  * (basically, a more elegant implementation of min-max search).

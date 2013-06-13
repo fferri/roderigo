@@ -9,7 +9,22 @@ import game.GameController;
 import game.GameController.GameListener;
 import game.player.AbstractPlayer;
 
+/**
+ * Class for evaluating a player
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class Evaluator {
+	/**
+	 * Evaluate two players by sampling a number of games outcomes
+	 * 
+	 * @param game
+	 * @param p1
+	 * @param p2
+	 * @param numMatches
+	 * @return
+	 */
 	public static <S extends AbstractBoard<P, A, C>, A extends AbstractAction<P>, C extends AbstractColor, P extends AbstractPosition> double[] evaluate(Game<S, A, C, P> game, final AbstractPlayer<S, A, C, P> p1, final AbstractPlayer<S, A, C, P> p2, int numMatches) {
 		final double ret[] = {0, 0, 0};
 		if(numMatches <= 0) return ret;

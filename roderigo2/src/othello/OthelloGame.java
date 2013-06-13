@@ -5,6 +5,12 @@ import game.Game;
 import java.math.BigInteger;
 import java.util.List;
 
+/**
+ * Implementation of the othello game
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class OthelloGame implements Game<OthelloBoard, OthelloBoard.Action, OthelloBoard.Color, OthelloBoard.Position> {
 	public OthelloBoard getInitialState() {
 		return new OthelloBoard();

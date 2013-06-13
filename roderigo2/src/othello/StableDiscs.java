@@ -2,7 +2,6 @@ package othello;
 
 import java.util.Iterator;
 
-
 /**
  * This class computes the discs that are stable FOR SURE.
  * It is incomplete, i.e. it may not neturn ALL stable discs.

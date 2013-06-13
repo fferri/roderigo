@@ -1,5 +1,12 @@
 package game;
 
+/**
+ * An abstract generic representation of an action in a board game
+ * 
+ * @author Federico Ferri
+ *
+ * @param <P> class representing the position
+ */
 public abstract class AbstractAction<P extends AbstractPosition> {
 	protected final P position;
 	

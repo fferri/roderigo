@@ -7,6 +7,16 @@ import game.AbstractPosition;
 import game.Game;
 import game.ai.MinMaxSearch;
 
+/**
+ * A player using MinMax as decision algorithm
+ * 
+ * @author Federico Ferri
+ *
+ * @param <S> class representing a board (the state)
+ * @param <A> class representing an action
+ * @param <C> class representing a color
+ * @param <P> class representing a position
+ */
 public class AIMinMaxPlayer<S extends AbstractBoard<P, A, C>, A extends AbstractAction<P>, C extends AbstractColor, P extends AbstractPosition> extends AbstractPlayer<S, A, C, P> {
 	private int maxDepth;
 	

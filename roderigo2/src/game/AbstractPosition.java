@@ -1,5 +1,11 @@
 package game;
 
+/**
+ * Abstract generic class representing a position on a board
+ * 
+ * @author Federico Ferri
+ *
+ */
 public abstract class AbstractPosition {
 	protected final int index;
 	

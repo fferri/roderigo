@@ -7,6 +7,12 @@ import tictactoe.TicTacToeBoard.Position;
 
 import game.Game;
 
+/**
+ * Implementation of the tic-tac-toe game
+ * 
+ * @author Federico Ferri
+ *
+ */
 public class TicTacToeGame implements Game<TicTacToeBoard, TicTacToeBoard.Action, TicTacToeBoard.Color, TicTacToeBoard.Position>{
 	private final TicTacToeBoard s0 = getInitialState();
 	
